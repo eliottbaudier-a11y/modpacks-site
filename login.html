@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Connexion</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .login-wrap{min-height:calc(100vh - 58px);display:flex;align-items:center;justify-content:center;padding:24px}
+  .login-card{width:100%;max-width:380px;background:var(--card);border:1px solid var(--line);padding:32px 28px}
+  .login-card h1{font-family:var(--disp);font-weight:800;font-size:28px;margin:0 0 6px;color:var(--ink)}
+  .login-card p.lede{font-size:13.5px;color:var(--ink-soft);margin:0 0 26px}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+  .field label{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint)}
+  .field input{font-family:var(--mono);font-size:14px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);padding:11px 13px;outline:none;transition:.14s;width:100%;box-sizing:border-box}
+  .field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+  .login-btn{width:100%;font-family:var(--body);font-weight:700;font-size:14px;color:var(--accent-ink);
+    background:var(--accent);border:1px solid var(--accent);padding:12px;cursor:pointer;transition:.12s;margin-top:6px}
+  .login-btn:hover{filter:brightness(1.06)}
+  .login-btn:disabled{opacity:.6;cursor:default}
+  .err{color:var(--bad);font-size:13px;margin:12px 0 0;min-height:1em}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a href="/" class="mark" aria-label="Accueil"></a>
+  <a href="/" class="word" style="text-decoration:none">Modpacks</a>
+  <nav class="nav"><a href="/">← Modpacks</a></nav>
+</div></header>
+
+<div class="login-wrap">
+  <form class="login-card" id="login-form" autocomplete="off">
+    <h1>connexion.</h1>
+    <p class="lede">Accès réservé — générateur &amp; modération des modpacks.</p>
+    <div class="field"><label>Identifiant</label><input id="l-user" type="text" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+    <div class="field"><label>Mot de passe</label><input id="l-pass" type="password" autocomplete="current-password"></div>
+    <button class="login-btn" id="l-submit" type="submit">Se connecter</button>
+    <p class="err" id="l-err"></p>
+  </form>
+</div>
+
+<script>
+(function(){
+  var form=document.getElementById('login-form');
+  var userEl=document.getElementById('l-user'), passEl=document.getElementById('l-pass');
+  var btn=document.getElementById('l-submit'), errEl=document.getElementById('l-err');
+
+  function nextUrl(){
+    var p=new URLSearchParams(location.search).get('next');
+    return (p && p.charAt(0)==='/') ? p : '/admin';
+  }
+
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var username=userEl.value.trim(), password=passEl.value;
+    if(!username||!password){errEl.textContent='remplis les deux champs.';return;}
+    btn.disabled=true; errEl.textContent='';
+    fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username,password:password})})
+      .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,body:j};});})
+      .then(function(res){
+        if(!res.ok){errEl.textContent=(res.body&&res.body.error)||'connexion refusée.';btn.disabled=false;passEl.value='';passEl.focus();return;}
+        try{sessionStorage.setItem('admin:pw',password);}catch(e){}
+        location.href=nextUrl();
+      })
+      .catch(function(){errEl.textContent='erreur réseau — réessaie.';btn.disabled=false;});
+  });
+  userEl.focus();
+})();
+</script>
+</body>
+</html>
