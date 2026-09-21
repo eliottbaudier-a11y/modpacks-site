@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Créateurs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  /* ===== page personnages (styles propres à la page, tokens partagés) ===== */
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-faint);margin:0 0 14px}
+
+  /* --- showcase des deux images --- */
+  .skins{padding:26px 0 8px}
+  .skins-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:end}
+  .skin-frame{position:relative;display:flex;justify-content:center;align-items:flex-end;
+    min-height:340px;padding:18px}
+  .skin-frame::before{content:"";position:absolute;inset:auto 0 6%;height:66%;z-index:0;
+    background:radial-gradient(60% 70% at 50% 40%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 70%);
+    filter:blur(6px)}
+  .skin-frame img{position:relative;z-index:1;max-width:100%;max-height:520px;width:auto;height:auto;
+    object-fit:contain;filter:drop-shadow(0 22px 34px rgba(0,0,0,.28));
+    animation:floaty 6s ease-in-out infinite;transition:transform .3s ease}
+  .skin-frame:nth-child(2) img{animation-duration:7.2s;animation-delay:-1.4s}
+  .skin-frame img:hover{transform:translateY(-6px) scale(1.03)}
+  .skins-cap{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);text-align:center;
+    padding:6px 0 2px;letter-spacing:.02em}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  .skins-grid.one{grid-template-columns:1fr;justify-items:center}
+  .skins-grid.one .skin-frame{min-height:0;width:100%;max-width:920px}
+  .skins-grid.one .skin-frame img{max-height:600px}
+  .skins-grid.one .skin-frame::before{inset:auto 8% 4%;height:52%}
+
+  /* --- séparateur de section --- */
+  .seclabel{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);
+    padding:52px 0 8px;letter-spacing:.02em;border-top:1px solid var(--line);margin-top:40px}
+
+  /* --- blocs personnages --- */
+  .roster{display:flex;flex-direction:column}
+  .member{--mc:var(--accent);position:relative;display:grid;
+    grid-template-columns:minmax(0,140px) 1fr;gap:26px;align-items:start;
+    padding:38px 0;border-bottom:1px solid var(--line)}
+  .member .idx{font-family:var(--disp);font-weight:800;font-size:clamp(56px,11vw,104px);line-height:.82;
+    color:transparent;-webkit-text-stroke:1.5px color-mix(in srgb,var(--mc) 60%,var(--line));
+    letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  .member .m-body{max-width:64ch}
+  .member .m-motif{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
+    color:var(--mc);border:1px solid color-mix(in srgb,var(--mc) 45%,var(--line));margin-bottom:14px}
+  .member .m-motif svg{width:19px;height:19px}
+  .member .m-name{font-family:var(--disp);font-weight:800;font-size:clamp(26px,4.4vw,40px);line-height:1.02;
+    letter-spacing:-.02em;margin:0}
+  .member .m-player{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);margin:11px 0 0;
+    display:inline-flex;align-items:center;gap:8px}
+  .member .m-player .dot{width:9px;height:9px;background:var(--mc);flex:none}
+  .member .m-player b{color:var(--mc);font-weight:700}
+  .member .m-text{color:var(--ink-soft);font-size:15px;line-height:1.62;margin:16px 0 0}
+  .member::after{content:"";position:absolute;left:0;top:0;bottom:-1px;width:2px;background:var(--mc);
+    transform:scaleY(0);transform-origin:top;transition:transform .5s ease}
+  .member:hover::after{transform:scaleY(1)}
+
+  /* --- fun facts --- */
+  .facts-head{padding:60px 0 4px}
+  .facts-head h2{font-family:var(--disp);font-weight:800;color:var(--accent);text-transform:lowercase;
+    margin:0;font-size:clamp(38px,8vw,72px);line-height:.9;letter-spacing:-.03em}
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);margin:30px 0 70px}
+  .fact{--fc:var(--accent);background:var(--card);padding:34px 26px 30px;display:flex;flex-direction:column}
+  .fact:hover{background:var(--paper)}
+  .fact .num{font-family:var(--disp);font-weight:800;color:var(--fc);
+    font-size:clamp(56px,9vw,104px);line-height:.86;letter-spacing:-.035em;
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .fact .lab{font-family:var(--body);font-weight:700;font-size:15px;color:var(--ink);margin:16px 0 0}
+  .fact .joke{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);margin:9px 0 0;line-height:1.6}
+
+  /* --- animations au scroll --- */
+  .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  @media (max-width:760px){
+    .skins-grid{gap:8px}
+    .skin-frame{min-height:260px;padding:8px}
+    .member{grid-template-columns:1fr;gap:6px;padding:30px 0}
+    .member .idx{font-size:64px}
+    .facts{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .skin-frame img{animation:none}
+    .reveal{opacity:1;transform:none;transition:none}
+  }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a href="/" aria-label="Accueil"><img src="/assets/logo.png" alt="" class="mark" width="34" height="40"></a>
+  <a href="/" class="word" style="text-decoration:none">Modpacks</a>
+  <nav class="nav">
+    <a href="/">← Modpacks</a>
+    <a href="/personnages" aria-current="page">Créateurs</a>
+  </nav>
+  <div class="hgroup">
+    <span class="meta"><span>les membres</span></span>
+    <a href="/login" class="mini" title="Accéder au générateur / à la modération">Connexion</a>
+  </div>
+</div></header>
+
+<div class="wrap">
+  <section class="hero">
+    <p class="kicker">Le serveur</p>
+    <h1>créateurs.</h1>
+    <p class="lede">Trois joueurs, trois légendes du serveur. Voici les créateurs emblématiques — leurs skins, leurs manies, et quelques chiffres qui parlent d'eux-mêmes.</p>
+  </section>
+
+  <!-- ===== les deux images (les trois skins) ===== -->
+  <section class="skins">
+    <div class="skins-grid one">
+      <div class="skin-frame reveal"><img src="/assets/characters/skins.png" alt="Skins Minecraft des créateurs du serveur" loading="lazy"></div>
+    </div>
+    <p class="skins-cap reveal">// les créateurs du serveur</p>
+  </section>
+
+  <!-- ===== présentation des trois personnages ===== -->
+  <div class="seclabel reveal">// les trois personnages</div>
+  <section class="roster">
+
+    <article class="member reveal" style="--mc:#9a7bd0">
+      <div class="idx">01</div>
+      <div class="m-body">
+        <span class="m-motif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="15.5 8.5 10.5 10.5 8.5 15.5 13.5 13.5"/></svg></span>
+        <h2 class="m-name">L'Explorateur Fou</h2>
+        <p class="m-player"><span class="dot"></span>joueur : <b>Le Roi des Chauves</b></p>
+        <p class="m-text">Toujours un pied dehors et l'autre déjà dans le portail suivant. L'Explorateur Fou a arpenté chaque biome, cartographié les grottes les plus profondes et défié le Dragon de l'End bien plus souvent que de raison. Là où les autres posent un lit, lui repart vers l'horizon — sac plein, boussole en main, prêt pour la prochaine découverte.</p>
+      </div>
+    </article>
+
+    <article class="member reveal" style="--mc:#c9a24a">
+      <div class="idx">02</div>
+      <div class="m-body">
+        <span class="m-motif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7L4 14v6h6l7-7"/></svg></span>
+        <h2 class="m-name">Le Constructeur Fou</h2>
+        <p class="m-player"><span class="dot"></span>joueur : <b>Aurifer</b></p>
+        <p class="m-text">Le grand maître bâtisseur du groupe. Donnez-lui un terrain plat et il en fera une ville ; donnez-lui une falaise et il en fera un château. Maisons, ponts, cathédrales de pierre — Aurifer empile les blocs comme d'autres respirent, avec un œil d'architecte et une patience infinie pour le détail qui change tout.</p>
+      </div>
+    </article>
+
+    <article class="member reveal" style="--mc:#4f9ecb">
+      <div class="idx">03</div>
+      <div class="m-body">
+        <span class="m-motif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12l3 6-9 12L3 9z"/><path d="M3 9h18M9 3l3 18M15 3l-3 18"/></svg></span>
+        <h2 class="m-name">L'Enutrof</h2>
+        <p class="m-player"><span class="dot"></span>joueur : <b>Flappeurd</b></p>
+        <p class="m-text">Un seul mot le fait vibrer : diamant. L'Enutrof accumule, thésaurise et recompte ses richesses coffre après coffre. Chaque minerai est un trophée, chaque coffre une petite fortune bien rangée. Prêter ? Jamais. Partager ? On verra. Il dort mieux en sachant ses stacks au complet — et bien fermés à double tour.</p>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- ===== fun facts ===== -->
+  <div class="facts-head reveal"><h2>fun facts.</h2></div>
+  <section class="facts">
+    <div class="fact reveal" style="--fc:#9a7bd0">
+      <div class="num" data-target="67">0</div>
+      <div class="lab">Dragons de l'End tués</div>
+      <div class="joke">Le Dragon envisage sérieusement de déménager.</div>
+    </div>
+    <div class="fact reveal" style="--fc:#c9a24a">
+      <div class="num" data-target="84">0</div>
+      <div class="lab">Maisons construites</div>
+      <div class="joke">Autant que de mods sur le serveur. Coïncidence ?</div>
+    </div>
+    <div class="fact reveal" style="--fc:#4f9ecb">
+      <div class="num" data-target="100000">0</div>
+      <div class="lab">Diamants dans les coffres</div>
+      <div class="joke">Et il vérifie le total chaque soir, au cas où.</div>
+    </div>
+  </section>
+</div><!-- /wrap -->
+
+<footer class="wrap" id="foot">Les créateurs emblématiques du serveur · page créateurs</footer>
+
+<button id="totop" aria-label="Revenir en haut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg></button>
+
+<script>
+(function(){
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* révélation au scroll */
+  var revs = [].slice.call(document.querySelectorAll('.reveal'));
+  if (reduce || !('IntersectionObserver' in window)) {
+    revs.forEach(function(el){ el.classList.add('in'); });
+  } else {
+    revs.forEach(function(el,i){ el.style.transitionDelay = Math.min(i*60,240)+'ms'; });
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: .16, rootMargin: '0px 0px -8% 0px' });
+    revs.forEach(function(el){ io.observe(el); });
+  }
+
+  /* compteurs des fun facts */
+  function fmt(n){ return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+  function countUp(el){
+    var target = +el.dataset.target || 0, dur = 1300, t0 = null;
+    function step(ts){
+      if(!t0) t0 = ts;
+      var p = Math.min((ts - t0)/dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(target * eased);
+      if(p < 1) requestAnimationFrame(step); else el.textContent = fmt(target);
+    }
+    requestAnimationFrame(step);
+  }
+  var nums = [].slice.call(document.querySelectorAll('.num[data-target]'));
+  if (reduce || !('IntersectionObserver' in window)) {
+    nums.forEach(function(el){ el.textContent = fmt(+el.dataset.target||0); });
+  } else {
+    var io2 = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ countUp(e.target); io2.unobserve(e.target); } });
+    }, { threshold: .5 });
+    nums.forEach(function(el){ io2.observe(el); });
+  }
+
+  /* retour en haut */
+  var tt = document.getElementById('totop');
+  if (tt){ addEventListener('scroll', function(){ tt.classList.toggle('show', scrollY>420); }, {passive:true});
+    tt.addEventListener('click', function(){ scrollTo({top:0, behavior:'smooth'}); }); }
+})();
+</script>
+</body>
+</html>
