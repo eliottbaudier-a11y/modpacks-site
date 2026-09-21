@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Générateur de modpack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+<style>
+  .form{display:grid;grid-template-columns:1fr 1fr;gap:16px 18px;max-width:820px;margin-top:6px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field.wide{grid-column:1/-1}
+  .field label{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint)}
+  .field label b{color:var(--accent);font-weight:700}
+  .field input,.field select,.field textarea{font-family:var(--mono);font-size:13.5px;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);padding:11px 13px;outline:none;transition:.14s;width:100%}
+  .field textarea{font-family:var(--body);min-height:78px;resize:vertical;line-height:1.5}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);
+    box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 16%,transparent)}
+  .field .note{font-family:var(--mono);font-size:10px;color:var(--ink-faint)}
+  .secttl{font-family:var(--disp);font-weight:700;font-size:22px;margin:44px 0 4px;color:var(--ink)}
+  .secsub{color:var(--ink-soft);font-size:14px;margin:0 0 14px;max-width:70ch}
+  .gen-row{display:flex;gap:12px;flex-wrap:wrap;margin:20px 0 8px}
+  .gen-row .dl-btn{cursor:pointer;border:1px solid var(--accent)}
+  .gen-row .ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .gen-row .ghost:hover{border-color:var(--ink-soft);filter:none}
+  .howto{background:var(--card);border:1px solid var(--line);padding:20px 22px;margin:8px 0 60px;max-width:820px}
+  .howto h3{font-family:var(--disp);font-size:15px;margin:0 0 10px}
+  .howto ol{margin:0;padding-left:18px;color:var(--ink-soft);font-size:13.5px;line-height:1.7}
+  .howto code{font-family:var(--mono);font-size:12px;background:var(--paper);border:1px solid var(--line);padding:1px 5px}
+  @media (max-width:640px){.form{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a href="/" class="mark" aria-label="Accueil"></a>
+  <a href="/" class="word" style="text-decoration:none">Modpacks</a>
+  <nav class="nav"><a href="/">← Modpacks</a></nav>
+  <div class="hgroup"><span class="meta"><span>générateur</span></span></div>
+</div></header>
+
+<div class="wrap">
+  <section class="hero">
+    <h1>générateur.</h1>
+    <p class="lede">Remplis les infos du serveur, ajoute tes mods (colle des liens Modrinth), puis télécharge les deux fichiers à déposer dans le projet. Rien n'est envoyé nulle part — tout se passe sur ton appareil.</p>
+  </section>
+
+  <div class="secttl">1 · Le serveur</div>
+  <p class="secsub">L'identifiant est calculé automatiquement à partir du nom (il sert dans l'adresse : <code>/modpacks/&lt;id&gt;</code>).</p>
+  <div class="form">
+    <div class="field"><label><b>Nom</b> du modpack</label><input id="f-name" placeholder="ex : Fantasy Adventure"></div>
+    <div class="field"><label>Identifiant (URL)</label><input id="f-id" placeholder="fantasy-adventure"><span class="note">auto — modifiable</span></div>
+    <div class="field"><label>Version Minecraft</label><input id="f-mc" placeholder="1.21.1"></div>
+    <div class="field"><label>Loader</label><select id="f-loader"><option>Fabric</option><option>Forge</option><option>NeoForge</option><option>Quilt</option></select></div>
+    <div class="field"><label>Petite phrase (tagline)</label><input id="f-tag" placeholder="ex : aventure & donjons"></div>
+    <div class="field"><label>Statut</label><select id="f-status"><option value="active">Actif</option><option value="dev">En développement</option><option value="archived">Archivé</option></select></div>
+    <div class="field wide"><label>Description</label><textarea id="f-desc" placeholder="De quoi parle ce serveur, son ambiance, ses règles…"></textarea></div>
+    <div class="field"><label>Lien de téléchargement du pack (optionnel)</label><input id="f-dl" placeholder="/mon-pack.zip ou une URL"></div>
+    <div class="field"><label>Lien Discord (optionnel)</label><input id="f-discord" placeholder="https://discord.gg/…"></div>
+    <div class="field wide"><label>Image de couverture (optionnel)</label><input id="f-cover" placeholder="/covers/fantasy-adventure.jpg — sinon une couverture est générée"></div>
+  </div>
+
+  <div class="secttl">2 · Les mods</div>
+  <p class="secsub">Colle un lien Modrinth (ou plusieurs, séparés par un espace), choisis une catégorie, puis « Ajouter ». Le nom, l'icône, la description et le côté client/serveur se remplissent automatiquement.</p>
+  <div class="builder" style="padding-top:4px">
+    <div class="addbar">
+      <div class="f"><input id="mk-url" type="text" placeholder="colle un lien modrinth…  ex : https://modrinth.com/mod/sodium" autocomplete="off" spellcheck="false"></div>
+      <select id="mk-cat" aria-label="catégorie"></select>
+      <button id="mk-add" class="add-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ajouter</button>
+    </div>
+    <p class="hint">Chaque mod ajouté est marqué <b>Retenu</b> par défaut (tu peux changer ça plus tard dans le fichier généré).</p>
+    <p class="err" id="mk-err"></p>
+    <div class="mybar"><span class="c" id="my-count"></span><button class="mini danger" id="mk-clear">Tout vider</button></div>
+    <section class="grid" id="my-grid"></section>
+  </div>
+
+  <div class="secttl">3 · Générer les fichiers</div>
+  <p class="secsub">Télécharge les deux fichiers, dépose-les dans le projet, et le nouveau serveur apparaît avec exactement le même design.</p>
+  <div class="gen-row">
+    <button class="dl-btn" id="gen-mods"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg><span>Télécharger data/mods/&lt;id&gt;.js</span></button>
+    <button class="dl-btn ghost" id="gen-entry"><span>Copier l'entrée pour modpacks.js</span></button>
+  </div>
+
+  <div class="howto">
+    <h3>Où déposer les fichiers</h3>
+    <ol>
+      <li>Place <code>&lt;id&gt;.js</code> dans le dossier <code>data/mods/</code> du projet.</li>
+      <li>Ouvre <code>data/modpacks.js</code> et colle l'entrée copiée dans la liste <code>window.MODPACKS = [ … ]</code> (avant le crochet fermant, avec une virgule).</li>
+      <li>Enregistre, republie sur Vercel. Aucune autre modification nécessaire.</li>
+    </ol>
+  </div>
+</div>
+
+<button id="totop" aria-label="Revenir en haut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg></button>
+
+<script src="/data/modpacks.js"></script>
+<script>
+(function(){
+  var CATS=window.CATEGORIES||[], CATC=window.CATEGORY_COLORS||{};
+  var DKEY='admin:draft:v1';
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function slugify(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+  function jsstr(s){return '"'+String(s==null?'':s).replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n')+'"';}
+
+  /* ---- form persistence ---- */
+  var fields={name:'f-name',id:'f-id',mc:'f-mc',loader:'f-loader',tag:'f-tag',status:'f-status',desc:'f-desc',dl:'f-dl',discord:'f-discord',cover:'f-cover'};
+  var draft={meta:{},mods:[]};
+  try{draft=JSON.parse(localStorage.getItem(DKEY))||draft;}catch(e){}
+  draft.meta=draft.meta||{}; draft.mods=draft.mods||[];
+  function saveDraft(){try{localStorage.setItem(DKEY,JSON.stringify(draft));}catch(e){}}
+
+  Object.keys(fields).forEach(function(k){
+    var el=document.getElementById(fields[k]);
+    if(draft.meta[k]!=null) el.value=draft.meta[k];
+    el.addEventListener('input',function(){draft.meta[k]=el.value;saveDraft();});
+  });
+  var nameEl=document.getElementById('f-name'), idEl=document.getElementById('f-id');
+  var idTouched=!!draft.meta.id;
+  idEl.addEventListener('input',function(){idTouched=true;});
+  nameEl.addEventListener('input',function(){ if(!idTouched){ idEl.value=slugify(nameEl.value); draft.meta.id=idEl.value; saveDraft(); } });
+
+  /* ---- category select ---- */
+  var catSel=document.getElementById('mk-cat');
+  catSel.innerHTML='<option value="">catégorie (optionnel)</option>'+CATS.map(function(c){return '<option value="'+esc(c.name)+'">'+c.emoji+' '+esc(c.name)+'</option>';}).join('');
+
+  /* ---- icon helpers (Modrinth + emoji fallback) ---- */
+  var inflight=0, queue=[];
+  function loadIcons(){document.querySelectorAll('.ph[data-slug]').forEach(function(ph){var slug=ph.dataset.slug;if(!slug||ph.dataset.q)return;ph.dataset.q=1;queue.push({ph:ph,slug:slug});});pump();}
+  function pump(){while(inflight<6&&queue.length){var it=queue.shift();inflight++;(function(ph,slug){getIcon(slug).then(function(url){if(url&&ph.isConnected){var img=new Image();img.onload=function(){ph.outerHTML='<img src="'+url+'" alt="">';};img.src=url;}}).catch(function(){}).finally(function(){inflight--;pump();});})(it.ph,it.slug);}}
+  function getIcon(slug){try{var c=localStorage.getItem('mr:'+slug);if(c)return Promise.resolve(c==='0'?null:c);}catch(e){}return fetch('https://api.modrinth.com/v2/project/'+encodeURIComponent(slug)).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){var url=j.icon_url||null;try{localStorage.setItem('mr:'+slug,url||'0');}catch(e){}return url;});}
+  function phTile(col,emoji,slug){return '<div class="ph" style="--pc:'+col+'"'+(slug?' data-slug="'+slug+'"':'')+'><span>'+(emoji||'🧩')+'</span></div>';}
+  function iconHTML(url,col,emoji,slug){if(url)return '<img src="'+url+'" alt="" loading="lazy" data-col="'+col+'" data-emoji="'+(emoji||'🧩')+'">';return phTile(col,emoji,slug);}
+  document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG'&&t.parentElement&&t.parentElement.classList.contains('icon')&&!t.dataset.fb){t.dataset.fb=1;t.outerHTML=phTile(t.dataset.col||'#8b8f96',t.dataset.emoji||'🧩','');}},true);
+
+  /* ---- mods builder ---- */
+  var myGrid=document.getElementById('my-grid'), myCount=document.getElementById('my-count');
+  var urlIn=document.getElementById('mk-url'), addBtn=document.getElementById('mk-add'), errEl=document.getElementById('mk-err');
+
+  function pretty(s){return s.replace(/[-_]+/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});}
+  function slugFrom(x){x=(x||'').trim();var m=x.match(/modrinth\.com\/[a-z]+\/([^\/?#]+)/i);return (m?m[1]:x).replace(/^@/,'').trim();}
+  function sideLabel(cs,ss){var c=cs&&cs!=='unsupported',s=ss&&ss!=='unsupported';if(c&&s)return'Client & serveur';if(s&&!c)return'Serveur';if(c&&!s)return'Client';return'';}
+
+  function cardHTML(it,idx){
+    var col=CATC[it.cat]||'#8b8f96';
+    var emoji=(CATS.filter(function(c){return c.name===it.cat;})[0]||{}).emoji||'🧩';
+    var icon=iconHTML(it.icon,col,emoji,it.slug);
+    var type=(it.type&&it.type!=='mod')?'<span class="dot">·</span><span>'+esc(it.type)+'</span>':'';
+    var side=it.side?'<span class="dot">·</span><span>'+esc(it.side.toLowerCase())+'</span>':'';
+    var catname=it.cat||'non classé';
+    return '<article class="card"><button class="rm" title="Retirer" data-i="'+idx+'">✕</button>'+
+      '<div class="ctop"><div class="icon">'+icon+'</div><div style="min-width:0;flex:1">'+
+      '<div class="cname">'+esc(it.name)+'</div><div class="cmeta"><span class="sw" style="background:'+col+'"></span><span>'+esc(catname)+'</span>'+type+side+'</div></div>'+
+      '<span class="status ok">Retenu</span></div><p class="cdesc">'+esc(it.desc||'')+'</p>'+
+      '<a class="go" href="'+esc(it.url)+'" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
+  }
+  function renderMods(){
+    myCount.textContent="// "+draft.mods.length+" mod"+(draft.mods.length>1?"s":"")+" dans ce pack";
+    myGrid.innerHTML=draft.mods.length?draft.mods.map(cardHTML).join(''):
+      '<div class="empty">aucun mod pour l\'instant — colle un lien Modrinth ci-dessus.</div>';
+    loadIcons();
+  }
+  myGrid.addEventListener('click',function(e){var b=e.target.closest('.rm');if(!b)return;draft.mods.splice(+b.dataset.i,1);saveDraft();renderMods();});
+
+  function addOne(raw){
+    var slug=slugFrom(raw);if(!slug)return Promise.resolve(false);
+    if(draft.mods.some(function(x){return x.slug.toLowerCase()===slug.toLowerCase();}))return Promise.resolve(true);
+    var cat=catSel.value||'';
+    var it={slug:slug,name:pretty(slug),desc:'',type:'mod',side:'',cat:cat,url:'https://modrinth.com/mod/'+slug,icon:''};
+    return fetch('https://api.modrinth.com/v2/project/'+encodeURIComponent(slug)).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){
+      it.name=j.title||it.name;it.desc=j.description||'';it.type=j.project_type||'mod';it.icon=j.icon_url||'';
+      it.side=sideLabel(j.client_side,j.server_side);it.url='https://modrinth.com/'+(j.project_type||'mod')+'/'+(j.slug||slug);
+      draft.mods.push(it);saveDraft();renderMods();return true;
+    }).catch(function(){draft.mods.push(it);saveDraft();renderMods();return false;});
+  }
+  function addFromInput(){
+    var raw=urlIn.value.trim();if(!raw){urlIn.focus();return;}
+    var parts=raw.split(/[\s,]+/).filter(Boolean);addBtn.disabled=true;errEl.textContent='';
+    var chain=Promise.resolve(false);
+    parts.forEach(function(p){chain=chain.then(function(any){return addOne(p).then(function(r){return any||r;});});});
+    chain.then(function(anyOk){addBtn.disabled=false;urlIn.value='';urlIn.focus();
+      if(!anyOk)errEl.textContent="ajouté depuis le lien, mais les infos Modrinth n'ont pas pu être chargées ici — sur le site en ligne elles se rempliront toutes seules.";});
+  }
+  addBtn.addEventListener('click',addFromInput);
+  urlIn.addEventListener('keydown',function(e){if(e.key==='Enter')addFromInput();});
+  document.getElementById('mk-clear').addEventListener('click',function(){if(!draft.mods.length)return;if(confirm('Retirer tous les mods de ce brouillon ?')){draft.mods=[];saveDraft();renderMods();}});
+
+  /* ---- generation ---- */
+  function getId(){return (idEl.value.trim()||slugify(nameEl.value)||'mon-modpack');}
+  function toModShape(it){
+    var emoji=(CATS.filter(function(c){return c.name===it.cat;})[0]||{}).emoji||'🧩';
+    return {n:it.name,c:it.cat||'',e:emoji,d:it.desc||'',v:'',s:it.side||'',st:'Retenu',dep:'',u:it.url,sl:it.slug,t:it.type||'mod',i:it.icon||null};
+  }
+  function download(filename,text){
+    var blob=new Blob([text],{type:'text/javascript'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=filename;
+    document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href);},1500);
+  }
+  document.getElementById('gen-mods').addEventListener('click',function(){
+    var id=getId();
+    var arr=draft.mods.map(toModShape);
+    var body='/* Mods du modpack "'+id+'" — généré via /admin */\n'+
+      'window.MODS_BY_PACK = window.MODS_BY_PACK || {};\n'+
+      'window.MODS_BY_PACK['+jsstr(id)+'] = '+JSON.stringify(arr,null,1)+';\n';
+    download(id+'.js',body);
+  });
+  document.getElementById('gen-entry').addEventListener('click',function(){
+    var m=draft.meta, id=getId();
+    var entry='  {\n'+
+      '    id: '+jsstr(id)+',\n'+
+      '    name: '+jsstr(m.name||id)+',\n'+
+      '    mcVersion: '+jsstr(m.mc||'')+',\n'+
+      '    loader: '+jsstr(m.loader||'Fabric')+',\n'+
+      '    tagline: '+jsstr(m.tag||'')+',\n'+
+      '    description: '+jsstr(m.desc||'')+',\n'+
+      '    status: '+jsstr(m.status||'active')+',\n'+
+      '    modsCount: '+draft.mods.length+',\n'+
+      '    cover: '+jsstr(m.cover||'')+',\n'+
+      '    download: '+jsstr(m.dl||'')+',\n'+
+      '    discord: '+jsstr(m.discord||'')+'\n'+
+      '  },';
+    var btn=document.getElementById('gen-entry'), label=btn.querySelector('span'), old=label.textContent;
+    navigator.clipboard.writeText(entry).then(function(){label.textContent='copié dans le presse-papier !';setTimeout(function(){label.textContent=old;},1600);})
+      .catch(function(){var ta=document.createElement('textarea');ta.value=entry;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');label.textContent='copié !';setTimeout(function(){label.textContent=old;},1600);}catch(_){}ta.remove();});
+  });
+
+  /* back-to-top */
+  (function(){var tt=document.getElementById('totop');if(!tt)return;addEventListener('scroll',function(){tt.classList.toggle('show',scrollY>420);},{passive:true});tt.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});})();
+
+  renderMods();
+})();
+</script>
+</body>
+</html>
