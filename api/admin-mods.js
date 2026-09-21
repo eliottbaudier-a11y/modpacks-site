@@ -25,6 +25,12 @@ export default async function handler(req, res) {
     res.status(500).json({ error: 'configuration serveur manquante (GITHUB_TOKEN / GITHUB_REPO)' });
     return;
   }
+  for (let i = 0; i < token.length; i++) {
+    if (token.charCodeAt(i) > 255) {
+      res.status(500).json({ error: `GITHUB_TOKEN contient un caractere invalide a la position ${i} (longueur totale: ${token.length}) — re-copie le token depuis GitHub sans caractere special` });
+      return;
+    }
+  }
 
   const { action, packId, mod, slug } = req.body || {};
 
