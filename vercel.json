@@ -2,6 +2,6 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/modpacks/:id", "destination": "/modpack.html" }
+    { "source": "/modpacks/:id", "destination": "/modpack" }
   ]
 }

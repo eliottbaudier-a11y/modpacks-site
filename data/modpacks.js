@@ -51,7 +51,7 @@ window.MODPACKS = [
     status: "active",
     modsCount: 84,
     cover: "",
-    download: "/Pack_mods_1_21_1.zip",
+    download: "https://github.com/eliottbaudier-a11y/modpacks-site/releases/download/pack-1.21.1/Pack_mods_1_21_1.zip",
     discord: ""
   }
   // ← copie ce bloc pour ajouter un nouveau serveur (n'oublie pas la virgule au-dessus)
