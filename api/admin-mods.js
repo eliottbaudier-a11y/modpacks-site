@@ -96,8 +96,25 @@ export default async function handler(req, res) {
     };
     list.push(clean);
     commitMsg = `admin: ajoute ${clean.sl} a ${packId}`;
+  } else if (action === 'edit') {
+    if (!slug || !mod) { res.status(400).json({ error: 'slug et mod requis' }); return; }
+    const idx = list.findIndex((m) => String(m.sl || '').toLowerCase() === String(slug).toLowerCase());
+    if (idx === -1) { res.status(404).json({ error: 'mod introuvable dans ce pack' }); return; }
+    const existing = list[idx];
+    const merged = {
+      ...existing,
+      n: mod.n != null ? String(mod.n).slice(0, 200) : existing.n,
+      c: mod.c != null ? String(mod.c).slice(0, 100) : existing.c,
+      d: mod.d != null ? String(mod.d).slice(0, 600) : existing.d,
+      s: mod.s != null ? String(mod.s).slice(0, 60) : existing.s,
+      st: mod.st != null ? String(mod.st).slice(0, 40) : existing.st,
+      dep: mod.dep != null ? String(mod.dep).slice(0, 200) : existing.dep,
+    };
+    if (!merged.n) { res.status(400).json({ error: 'le nom ne peut pas etre vide' }); return; }
+    list[idx] = merged;
+    commitMsg = `admin: modifie ${slug} dans ${packId}`;
   } else {
-    res.status(400).json({ error: 'action inconnue (add|remove attendu)' });
+    res.status(400).json({ error: 'action inconnue (add|remove|edit attendu)' });
     return;
   }
 

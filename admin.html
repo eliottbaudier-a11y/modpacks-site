@@ -31,6 +31,15 @@
   .howto ol{margin:0;padding-left:18px;color:var(--ink-soft);font-size:13.5px;line-height:1.7}
   .howto code{font-family:var(--mono);font-size:12px;background:var(--paper);border:1px solid var(--line);padding:1px 5px}
   @media (max-width:640px){.form{grid-template-columns:1fr}}
+  .card .rm.rm-edit{right:40px}
+  .card .rm.rm-edit:hover{border-color:var(--accent);color:var(--accent)}
+  .edit-card{display:flex;flex-direction:column;gap:10px}
+  .edit-card .field label{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-faint)}
+  .edit-card .field input,.edit-card .field select,.edit-card .field textarea{font-family:var(--mono);font-size:12.5px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);padding:8px 10px;outline:none;width:100%}
+  .edit-card .field textarea{font-family:var(--body);min-height:60px;resize:vertical}
+  .edit-card .ed-row{display:flex;gap:8px;margin-top:2px}
+  .edit-card .ed-row button{flex:1}
 </style>
 </head>
 <body>
@@ -260,7 +269,7 @@
     var catSel=document.getElementById('ad-cat'), stSel=document.getElementById('ad-st');
     var urlIn=document.getElementById('ad-url'), addBtn=document.getElementById('ad-add'), addErr=document.getElementById('ad-add-err');
     if(!packSel) return;
-    var currentId='', currentList=[];
+    var currentId='', currentList=[], editingSlug=null;
 
     packSel.innerHTML=PACKS.map(function(p){return '<option value="'+esc(p.id)+'">'+esc(p.name)+' ('+esc(p.id)+')</option>';}).join('');
     catSel.innerHTML='<option value="">catégorie (optionnel)</option>'+CATS.map(function(c){return '<option value="'+esc(c.name)+'">'+c.emoji+' '+esc(c.name)+'</option>';}).join('');
@@ -283,14 +292,27 @@
     function modCard(m){
       var col=CATC[m.c]||'#8b8f96', emoji=m.e||'🧩';
       var icon=iconHTML(m.i,col,emoji,m.sl);
-      return '<article class="card"><button class="rm" title="Supprimer" data-sl="'+esc(m.sl)+'">✕</button>'+
+      return '<article class="card"><button class="rm rm-edit" title="Modifier" data-edit-sl="'+esc(m.sl)+'">✎</button>'+
+        '<button class="rm rm-del" title="Supprimer" data-sl="'+esc(m.sl)+'">✕</button>'+
         '<div class="ctop"><div class="icon">'+icon+'</div><div style="min-width:0;flex:1">'+
         '<div class="cname">'+esc(m.n)+'</div><div class="cmeta"><span class="sw" style="background:'+col+'"></span><span>'+esc(m.c)+'</span></div></div></div>'+
         '<p class="cdesc">'+esc(m.d||'')+'</p>'+
         '<a class="go" href="'+esc(m.u)+'" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
     }
+    function editFormHTML(m){
+      var catOpts='<option value="">non classé</option>'+CATS.map(function(c){return '<option value="'+esc(c.name)+'"'+(c.name===m.c?' selected':'')+'>'+c.emoji+' '+esc(c.name)+'</option>';}).join('');
+      return '<article class="card edit-card">'+
+        '<div class="field"><label>Nom</label><input class="ed-n" value="'+esc(m.n)+'"></div>'+
+        '<div class="field"><label>Catégorie</label><select class="ed-c">'+catOpts+'</select></div>'+
+        '<div class="field"><label>Statut</label><input class="ed-st" value="'+esc(m.st||'')+'" placeholder="À tester / Retenu / Incompatible…"></div>'+
+        '<div class="field"><label>Côté</label><input class="ed-s" value="'+esc(m.s||'')+'" placeholder="Client + Serveur"></div>'+
+        '<div class="field"><label>Dépendances</label><input class="ed-dep" value="'+esc(m.dep||'')+'"></div>'+
+        '<div class="field"><label>Description</label><textarea class="ed-d">'+esc(m.d||'')+'</textarea></div>'+
+        '<div class="ed-row"><button class="dl-btn ed-save" data-sl="'+esc(m.sl)+'">Enregistrer</button><button class="dl-btn ghost ed-cancel">Annuler</button></div>'+
+        '</article>';
+    }
     function renderGrid(){
-      grid.innerHTML=currentList.length?currentList.map(modCard).join(''):'<div class="empty">aucun mod dans ce pack.</div>';
+      grid.innerHTML=currentList.length?currentList.map(function(m){return m.sl===editingSlug?editFormHTML(m):modCard(m);}).join(''):'<div class="empty">aucun mod dans ce pack.</div>';
       loadIcons();
     }
 
@@ -302,14 +324,44 @@
     });
 
     grid.addEventListener('click',function(e){
-      var b=e.target.closest('.rm');if(!b)return;
-      var slug=b.dataset.sl;
-      if(!confirm('Retirer "'+slug+'" du pack en ligne ?'))return;
-      b.disabled=true;errEl.textContent='';
-      api({action:'remove',packId:currentId,slug:slug}).then(function(res){
-        if(!res.ok){errEl.textContent='erreur : '+(res.body&&res.body.error||res.status);b.disabled=false;return;}
-        currentList=currentList.filter(function(m){return m.sl!==slug;});renderGrid();
-      });
+      var editBtn=e.target.closest('.rm-edit');
+      if(editBtn){editingSlug=editBtn.dataset.editSl;renderGrid();return;}
+
+      var cancelBtn=e.target.closest('.ed-cancel');
+      if(cancelBtn){editingSlug=null;renderGrid();return;}
+
+      var saveBtn=e.target.closest('.ed-save');
+      if(saveBtn){
+        var card=saveBtn.closest('.edit-card');
+        var slug=saveBtn.dataset.sl;
+        var upd={
+          n:card.querySelector('.ed-n').value.trim(),
+          c:card.querySelector('.ed-c').value,
+          st:card.querySelector('.ed-st').value.trim(),
+          s:card.querySelector('.ed-s').value.trim(),
+          dep:card.querySelector('.ed-dep').value.trim(),
+          d:card.querySelector('.ed-d').value.trim()
+        };
+        if(!upd.n){errEl.textContent='le nom ne peut pas être vide.';return;}
+        saveBtn.disabled=true;errEl.textContent='';
+        api({action:'edit',packId:currentId,slug:slug,mod:upd}).then(function(res){
+          if(!res.ok){errEl.textContent='erreur : '+(res.body&&res.body.error||res.status);saveBtn.disabled=false;return;}
+          currentList=currentList.map(function(m){return m.sl===slug?Object.assign({},m,upd):m;});
+          editingSlug=null;renderGrid();
+        });
+        return;
+      }
+
+      var delBtn=e.target.closest('.rm-del');
+      if(delBtn){
+        var dslug=delBtn.dataset.sl;
+        if(!confirm('Retirer "'+dslug+'" du pack en ligne ?'))return;
+        delBtn.disabled=true;errEl.textContent='';
+        api({action:'remove',packId:currentId,slug:dslug}).then(function(res){
+          if(!res.ok){errEl.textContent='erreur : '+(res.body&&res.body.error||res.status);delBtn.disabled=false;return;}
+          currentList=currentList.filter(function(m){return m.sl!==dslug;});renderGrid();
+        });
+      }
     });
 
     addBtn.addEventListener('click',function(){
