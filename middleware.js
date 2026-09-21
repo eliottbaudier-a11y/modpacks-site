@@ -26,35 +26,27 @@ async function hmacHex(message, secret) {
 }
 
 async function isValidToken(token, secret) {
-  if (!token) return 'no-token';
-  if (!secret) return 'no-secret';
+  if (!token || !secret) return false;
   const dot = token.lastIndexOf('.');
-  if (dot === -1) return 'malformed';
+  if (dot === -1) return false;
   const exp = token.slice(0, dot);
   const sig = token.slice(dot + 1);
   const expNum = Number(exp);
-  if (!expNum) return 'bad-exp';
-  if (Date.now() / 1000 > expNum) return 'expired';
+  if (!expNum || Date.now() / 1000 > expNum) return false;
   const expected = await hmacHex(exp, secret);
-  return expected === sig ? 'ok' : 'bad-sig';
+  return expected === sig;
 }
 
 export default async function middleware(request) {
   const cookieHeader = request.headers.get('cookie') || '';
   const token = parseCookie(cookieHeader, 'admin_auth');
-  const secret = process.env.ADMIN_PASSWORD || '';
+  const secret = String(process.env.ADMIN_PASSWORD || '').trim();
 
-  let reason;
-  try {
-    reason = await isValidToken(token, secret);
-  } catch (e) {
-    reason = 'exception:' + (e && e.message ? e.message.slice(0, 40) : 'unknown');
-  }
-  if (reason === 'ok') return;
+  const ok = await isValidToken(token, secret).catch(() => false);
+  if (ok) return;
 
   const target = new URL(request.url);
   const loginUrl = new URL('/login.html', target);
   loginUrl.searchParams.set('next', target.pathname);
-  loginUrl.searchParams.set('why', reason);
   return Response.redirect(loginUrl, 302);
 }
