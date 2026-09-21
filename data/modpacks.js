@@ -50,7 +50,7 @@ window.MODPACKS = [
     description: "Le catalogue des mods pensés pour le serveur — chacun expliqué, classé et suivi. Cherche, filtre par catégorie ou par statut, et ouvre la page Modrinth d'un clic.",
     status: "active",
     modsCount: 84,
-    cover: "",
+    cover: "/covers/minecraft-survival.jpg",
     download: "https://github.com/eliottbaudier-a11y/modpacks-site/releases/download/pack-1.21.1/Pack_mods_1_21_1.zip",
     discord: ""
   }
