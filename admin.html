@@ -91,6 +91,26 @@
       <li>Enregistre, republie sur Vercel. Aucune autre modification nécessaire.</li>
     </ol>
   </div>
+
+  <div class="secttl">4 · Modérer un pack en ligne</div>
+  <p class="secsub">Ajoute ou retire des mods directement sur le site en ligne — publie un commit GitHub, visible en ligne après ~30-60s (redéploiement automatique). Protégé par mot de passe.</p>
+  <div class="form" style="max-width:560px">
+    <div class="field wide"><label>Mot de passe admin</label><input id="ad-pw" type="password" placeholder="mot de passe" autocomplete="off"></div>
+    <div class="field wide"><label>Pack à modérer</label><select id="ad-pack"></select></div>
+  </div>
+  <div class="gen-row"><button class="dl-btn ghost" id="ad-load">Charger les mods de ce pack</button></div>
+  <p class="err" id="ad-err"></p>
+
+  <div id="ad-panel" hidden>
+    <div class="addbar">
+      <div class="f"><input id="ad-url" type="text" placeholder="colle un lien modrinth pour ajouter un mod…" autocomplete="off" spellcheck="false"></div>
+      <select id="ad-cat" aria-label="catégorie"></select>
+      <select id="ad-st" aria-label="statut"><option value="À tester">à tester</option><option value="Retenu">retenu</option></select>
+      <button id="ad-add" class="add-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ajouter</button>
+    </div>
+    <p class="err" id="ad-add-err"></p>
+    <section class="grid" id="ad-grid" style="margin-bottom:60px"></section>
+  </div>
 </div>
 
 <button id="totop" aria-label="Revenir en haut"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M6 11l6-6 6 6"/></svg></button>
@@ -230,6 +250,86 @@
   (function(){var tt=document.getElementById('totop');if(!tt)return;addEventListener('scroll',function(){tt.classList.toggle('show',scrollY>420);},{passive:true});tt.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});})();
 
   renderMods();
+
+  /* ---- 4 · modération live (add/remove via /api/admin-mods) ---- */
+  (function(){
+    var PACKS=window.MODPACKS||[];
+    var pwEl=document.getElementById('ad-pw'), packSel=document.getElementById('ad-pack');
+    var loadBtn=document.getElementById('ad-load'), errEl=document.getElementById('ad-err');
+    var panel=document.getElementById('ad-panel'), grid=document.getElementById('ad-grid');
+    var catSel=document.getElementById('ad-cat'), stSel=document.getElementById('ad-st');
+    var urlIn=document.getElementById('ad-url'), addBtn=document.getElementById('ad-add'), addErr=document.getElementById('ad-add-err');
+    if(!packSel) return;
+    var currentId='', currentList=[];
+
+    packSel.innerHTML=PACKS.map(function(p){return '<option value="'+esc(p.id)+'">'+esc(p.name)+' ('+esc(p.id)+')</option>';}).join('');
+    catSel.innerHTML='<option value="">catégorie (optionnel)</option>'+CATS.map(function(c){return '<option value="'+esc(c.name)+'">'+c.emoji+' '+esc(c.name)+'</option>';}).join('');
+
+    try{var savedPw=sessionStorage.getItem('admin:pw');if(savedPw)pwEl.value=savedPw;}catch(e){}
+    pwEl.addEventListener('input',function(){try{sessionStorage.setItem('admin:pw',pwEl.value);}catch(e){}});
+
+    function api(body){
+      return fetch('/api/admin-mods',{method:'POST',headers:{'Content-Type':'application/json','x-admin-password':pwEl.value},body:JSON.stringify(body)})
+        .then(function(r){return r.json().catch(function(){return {};}).then(function(j){return {ok:r.ok,status:r.status,body:j};});});
+    }
+    function loadPackList(id,cb){
+      var reg=window.MODS_BY_PACK||{};
+      if(reg[id])return cb(reg[id]);
+      var s=document.createElement('script');s.src='/data/mods/'+id+'.js';
+      s.onload=function(){cb((window.MODS_BY_PACK||{})[id]||[]);};
+      s.onerror=function(){cb([]);};
+      document.head.appendChild(s);
+    }
+    function modCard(m){
+      var col=CATC[m.c]||'#8b8f96', emoji=m.e||'🧩';
+      var icon=iconHTML(m.i,col,emoji,m.sl);
+      return '<article class="card"><button class="rm" title="Supprimer" data-sl="'+esc(m.sl)+'">✕</button>'+
+        '<div class="ctop"><div class="icon">'+icon+'</div><div style="min-width:0;flex:1">'+
+        '<div class="cname">'+esc(m.n)+'</div><div class="cmeta"><span class="sw" style="background:'+col+'"></span><span>'+esc(m.c)+'</span></div></div></div>'+
+        '<p class="cdesc">'+esc(m.d||'')+'</p>'+
+        '<a class="go" href="'+esc(m.u)+'" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
+    }
+    function renderGrid(){
+      grid.innerHTML=currentList.length?currentList.map(modCard).join(''):'<div class="empty">aucun mod dans ce pack.</div>';
+      loadIcons();
+    }
+
+    loadBtn.addEventListener('click',function(){
+      errEl.textContent='';panel.hidden=true;
+      if(!pwEl.value){errEl.textContent='entre le mot de passe admin.';return;}
+      currentId=packSel.value;loadBtn.disabled=true;
+      loadPackList(currentId,function(list){loadBtn.disabled=false;currentList=list.slice();panel.hidden=false;renderGrid();});
+    });
+
+    grid.addEventListener('click',function(e){
+      var b=e.target.closest('.rm');if(!b)return;
+      var slug=b.dataset.sl;
+      if(!confirm('Retirer "'+slug+'" du pack en ligne ?'))return;
+      b.disabled=true;errEl.textContent='';
+      api({action:'remove',packId:currentId,slug:slug}).then(function(res){
+        if(!res.ok){errEl.textContent='erreur : '+(res.body&&res.body.error||res.status);b.disabled=false;return;}
+        currentList=currentList.filter(function(m){return m.sl!==slug;});renderGrid();
+      });
+    });
+
+    addBtn.addEventListener('click',function(){
+      var raw=urlIn.value.trim();if(!raw){urlIn.focus();return;}
+      if(!pwEl.value){addErr.textContent='entre le mot de passe admin.';return;}
+      if(!currentId){addErr.textContent="charge un pack d'abord.";return;}
+      var slug=slugFrom(raw);if(!slug)return;
+      if(currentList.some(function(m){return (m.sl||'').toLowerCase()===slug.toLowerCase();})){addErr.textContent='ce mod est déjà dans la liste.';return;}
+      addBtn.disabled=true;addErr.textContent='';
+      fetch('https://api.modrinth.com/v2/project/'+encodeURIComponent(slug)).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){
+        var emoji=(CATS.filter(function(c){return c.name===catSel.value;})[0]||{}).emoji||'🧩';
+        var mod={n:j.title||pretty(slug),c:catSel.value||'',e:emoji,d:j.description||'',v:'',s:sideLabel(j.client_side,j.server_side),
+          st:stSel.value||'À tester',dep:'',u:'https://modrinth.com/'+(j.project_type||'mod')+'/'+(j.slug||slug),sl:j.slug||slug,t:j.project_type||'mod',i:j.icon_url||null};
+        return api({action:'add',packId:currentId,mod:mod}).then(function(res){
+          if(!res.ok){addErr.textContent='erreur : '+(res.body&&res.body.error||res.status);return;}
+          currentList.push(mod);urlIn.value='';renderGrid();
+        });
+      }).catch(function(){addErr.textContent='mod introuvable sur modrinth — vérifie le lien.';}).finally(function(){addBtn.disabled=false;});
+    });
+  })();
 })();
 </script>
 </body>
