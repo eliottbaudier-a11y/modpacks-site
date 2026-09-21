@@ -13,13 +13,14 @@ export default async function handler(req, res) {
   }
 
   const password = req.headers['x-admin-password'];
-  if (!password || password !== process.env.ADMIN_PASSWORD) {
+  const expected = String(process.env.ADMIN_PASSWORD || '').trim();
+  if (!password || String(password).trim() !== expected) {
     res.status(401).json({ error: 'mot de passe incorrect' });
     return;
   }
 
-  const token = process.env.GITHUB_TOKEN;
-  const repo = process.env.GITHUB_REPO;
+  const token = String(process.env.GITHUB_TOKEN || '').trim();
+  const repo = String(process.env.GITHUB_REPO || '').trim();
   if (!token || !repo) {
     res.status(500).json({ error: 'configuration serveur manquante (GITHUB_TOKEN / GITHUB_REPO)' });
     return;
