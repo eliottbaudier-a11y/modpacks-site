@@ -1083,7 +1083,7 @@ window.MODS_BY_PACK["minecraft-survival"] = [
   "n": "Sodium",
   "c": "Mods client uniquement",
   "e": "🖥️",
-  "d": "Optimise fortement le rendu et les FPS.",
+  "d": "TEST EDIT - a annuler",
   "v": "Fabric 1.21.1",
   "s": "Client",
   "st": "Retenu",
