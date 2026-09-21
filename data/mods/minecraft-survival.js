@@ -1176,19 +1176,5 @@ window.MODS_BY_PACK["minecraft-survival"] = [
   "sl": "ribbits",
   "t": "mod",
   "i": "https://cdn.modrinth.com/data/8YcE8y4T/3ce5ca40bdbae97978c5950a8be3222c97ac0c35_96.webp"
- },
- {
-  "n": "Lithium (test)",
-  "c": "",
-  "e": "??",
-  "d": "test admin api",
-  "v": "",
-  "s": "",
-  "st": "� tester",
-  "dep": "",
-  "u": "https://modrinth.com/mod/lithium",
-  "sl": "__test-admin-api__",
-  "t": "mod",
-  "i": null
  }
 ];
