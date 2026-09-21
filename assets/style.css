@@ -36,9 +36,7 @@
   header.top{border-bottom:1px solid var(--line);background:var(--paper);
     position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
   .top .wrap{display:flex;align-items:center;gap:12px;height:58px}
-  .mark{width:16px;height:16px;flex:none;background:
-    conic-gradient(var(--accent) 0 25%,transparent 0 50%,var(--accent) 0 75%,transparent 0);
-    background-color:var(--ink);}
+  .mark{width:34px;height:40px;flex:none;object-fit:contain;display:block}
   .word{font-family:var(--disp);font-weight:700;font-size:18px;letter-spacing:-.01em}
   .top .meta{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-soft);
     display:flex;gap:14px}
