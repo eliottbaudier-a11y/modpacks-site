@@ -459,7 +459,7 @@
             mcv:mc,ld:loader,autoAdded:!!r.requiredBy,reqBy:r.requiredBy||null
           });
         });
-        if(!toAdd.length){addErr.textContent='rien à ajouter. Erreurs : '+(errors.join(' · ')||'aucune correspondance.');addBtn.disabled=false;return;}
+        if(!toAdd.length){addErr.textContent=errors.length?('rien à ajouter — erreurs : '+errors.join(' · ')):'déjà dans la liste (ou aucune dépendance manquante à ajouter).';addBtn.disabled=false;return;}
         return api({action:'addBatch',packId:currentId,mods:toAdd}).then(function(res){
           addBtn.disabled=false;
           if(!res.ok){addErr.textContent='erreur : '+(res.body&&res.body.error||res.status);return;}
