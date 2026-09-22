@@ -132,8 +132,8 @@
   .empty{grid-column:1/-1;background:var(--card);text-align:center;color:var(--ink-soft);padding:60px 20px;
     font-family:var(--mono);font-size:13px}
 
-  footer{border-top:1px solid var(--line);padding:22px 0 40px;font-family:var(--mono);
-    font-size:11px;color:var(--ink-faint)}
+  footer{border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+  footer.wrap{padding-top:28px;padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))}
   @media (max-width:560px){
     .top .meta{display:none}.hero{padding:44px 0 24px}.flabel{width:100%;margin-bottom:-3px}
   }
