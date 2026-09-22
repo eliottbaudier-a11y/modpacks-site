@@ -117,10 +117,14 @@
   .sheet-foot{display:flex;align-items:center;gap:12px;padding:16px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
   .sheet-foot .err{font-family:var(--mono);font-size:11px;color:var(--bad)}
   .sheet-foot .actions{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
-  .btn-ghost{font-family:var(--body);font-weight:600;font-size:13px;background:transparent;color:var(--ink);border:1px solid var(--line);padding:11px 16px;cursor:pointer}
-  .btn-ghost:hover{border-color:var(--ink-soft)}
-  .btn-danger{font-family:var(--body);font-weight:600;font-size:13px;background:transparent;color:var(--bad);border:1px solid var(--bad);padding:11px 16px;cursor:pointer}
-  .btn-danger:hover{background:var(--bad);color:#fff}
+  .btn-ghost{font-family:var(--body);font-weight:600;font-size:13px;background:transparent;color:var(--ink);border:1px solid var(--line);padding:11px 16px;cursor:pointer;
+    transition:border-color .18s ease,transform .18s ease}
+  .btn-ghost:hover{border-color:var(--ink-soft);transform:translateY(-1px)}
+  .btn-ghost:active{transform:translateY(0)}
+  .btn-danger{font-family:var(--body);font-weight:600;font-size:13px;background:transparent;color:var(--bad);border:1px solid var(--bad);padding:11px 16px;cursor:pointer;
+    transition:background .18s ease,color .18s ease,transform .18s ease}
+  .btn-danger:hover{background:var(--bad);color:#fff;transform:translateY(-1px)}
+  .btn-danger:active{transform:translateY(0)}
 
   /* vue détail */
   .dv-cat{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;
