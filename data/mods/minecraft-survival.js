@@ -1176,28 +1176,5 @@ window.MODS_BY_PACK["minecraft-survival"] = [
   "sl": "ribbits",
   "t": "mod",
   "i": "https://cdn.modrinth.com/data/8YcE8y4T/3ce5ca40bdbae97978c5950a8be3222c97ac0c35_96.webp"
- },
- {
-  "n": "Fabric API (test dep)",
-  "c": "",
-  "e": "??",
-  "d": "test batch dep",
-  "v": "",
-  "s": "Client & serveur",
-  "st": "Retenu",
-  "dep": "",
-  "u": "https://modrinth.com/mod/fabric-api",
-  "sl": "__test-batch-dep__",
-  "t": "mod",
-  "i": null,
-  "mver": "0.116.17+1.21.1",
-  "furl": "https://cdn.modrinth.com/data/P7dR8mSH/versions/test/fabric-api-test.jar",
-  "fname": "fabric-api-test.jar",
-  "fsize": 1000,
-  "vid": "testid",
-  "mcv": "1.21.1",
-  "ld": "fabric",
-  "autoAdded": true,
-  "reqBy": "Immersive Aircraft (test)"
  }
 ];
