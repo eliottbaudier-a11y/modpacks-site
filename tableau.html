@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
-  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 14px}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin:0 0 14px}
   /* compteurs */
   .stats{display:flex;gap:0;flex-wrap:wrap;margin-top:24px;border:1px solid var(--line);width:fit-content;max-width:100%}
   .stat{padding:14px 24px;border-right:1px solid var(--line)}
@@ -24,7 +24,7 @@
   .search:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
   .search svg{color:var(--ink-faint);flex:none}
   .search input{flex:1;border:none;background:none;outline:none;font-family:var(--body);font-size:14px;color:var(--ink);padding:11px 0}
-  .newBtn{font-size:14px;padding:12px 16px}
+  .newBtn{font-size:14px;padding:12px 18px}
 
   .filters{display:flex;align-items:center;gap:4px 20px;flex-wrap:wrap;padding:14px 0 2px}
   .filters .grp{display:flex;gap:4px 18px;flex-wrap:wrap}
@@ -53,7 +53,7 @@
   .note .nhead{display:flex;align-items:center;gap:8px;margin-bottom:9px}
   .note .cat{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
     color:var(--nc);padding:3px 7px;border:1px solid color-mix(in srgb,var(--nc) 40%,transparent);line-height:1}
-  .note .prio{width:8px;height:8px;border-radius:50%;flex:none;margin-left:2px}
+  .note .prio{width:8px;height:8px;flex:none;margin-left:2px}
   .note .more{margin-left:auto;width:24px;height:24px;display:grid;place-items:center;cursor:pointer;color:var(--ink-faint);
     background:none;border:none;font-size:15px;line-height:1}
   .note .more:hover{color:var(--ink)}
@@ -95,7 +95,7 @@
   .sheet{background:var(--paper);border:1px solid var(--line);max-width:640px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.42);
     animation:mpop .24s cubic-bezier(.2,.7,.2,1)}
   @keyframes mpop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
-  .sheet.sm{max-width:430px}
+  .sheet.sm{max-width:440px}
   .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
   .sheet-head h2{font-family:var(--disp);font-weight:700;font-size:18px;margin:0}
   .sheet-head .x{width:34px;height:34px;display:grid;place-items:center;cursor:pointer;background:var(--card);border:1px solid var(--line);color:var(--ink);font-size:16px}
@@ -109,12 +109,12 @@
   .field label b{color:var(--accent)}
   .field input,.field select,.field textarea{font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--card);
     border:1px solid var(--line);padding:10px 12px;outline:none;transition:.14s;width:100%}
-  .field textarea{font-family:var(--body);min-height:70px;resize:vertical;line-height:1.5}
+  .field textarea{font-family:var(--body);min-height:64px;resize:vertical;line-height:1.5}
   .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
-  .drop{border:1px dashed var(--line);background:var(--card);aspect-ratio:16/8;display:grid;place-items:center;text-align:center;cursor:pointer;overflow:hidden;position:relative;transition:.15s}
+  .drop{border:1px dashed var(--line);background:var(--card);aspect-ratio:16/10;display:grid;place-items:center;text-align:center;cursor:pointer;overflow:hidden;position:relative;transition:.15s}
   .drop:hover{border-color:var(--accent)}.drop img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .drop .ph{font-family:var(--mono);font-size:11px;color:var(--ink-faint);padding:14px;line-height:1.6}
-  .sheet-foot{display:flex;align-items:center;gap:12px;padding:15px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
+  .sheet-foot{display:flex;align-items:center;gap:12px;padding:16px 22px;border-top:1px solid var(--line);flex-wrap:wrap}
   .sheet-foot .err{font-family:var(--mono);font-size:11px;color:var(--bad)}
   .sheet-foot .actions{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
   .btn-ghost{font-family:var(--body);font-weight:600;font-size:13px;background:transparent;color:var(--ink);border:1px solid var(--line);padding:11px 16px;cursor:pointer}
@@ -163,7 +163,7 @@
   </section>
 
   <div class="tbar">
-    <div class="search"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.6" y1="16.6" x2="21" y2="21"/></svg><input id="q" type="text" placeholder="Rechercher une idée…" autocomplete="off"></div>
+    <div class="search"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="16.6" y1="16.6" x2="21" y2="21"/></svg><input id="q" type="text" placeholder="Rechercher une idée…" autocomplete="off"></div>
     <button class="dl-btn newBtn" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="t">Nouvelle idée</span></button>
   </div>
 
@@ -349,12 +349,12 @@
   function openDetail(id){var n=byId(id);if(!n)return;detailId=id;
     var nc=CATC[n.c]||"#c1440e";
     dvBody.style.setProperty("--nc",nc);
-    dvBody.innerHTML='<span class="dv-cat" style="--nc:'+nc+'"><span class="prio" style="width:8px;height:8px;border-radius:50%;background:'+(PRIOC[n.p]||"#8b8f96")+'"></span>'+esc(n.c)+'</span>'+
+    dvBody.innerHTML='<span class="dv-cat" style="--nc:'+nc+'"><span class="prio" style="width:8px;height:8px;background:'+(PRIOC[n.p]||"#8b8f96")+'"></span>'+esc(n.c)+'</span>'+
       (n.img?'<div class="dv-img">'+imgHTML(n.img)+'</div>':"")+
       '<h3>'+esc(n.t)+'</h3>'+(n.x?'<p class="desc">'+esc(n.x)+'</p>':"")+
       '<div class="dv-grid">'+
         '<div><div class="k">Auteur</div><div class="v">'+esc(n.a||"—")+'</div></div>'+
-        '<div><div class="k">Priorité</div><div class="v"><span class="prio" style="width:8px;height:8px;border-radius:50%;background:'+(PRIOC[n.p]||"#8b8f96")+'"></span>'+esc(n.p)+'</div></div>'+
+        '<div><div class="k">Priorité</div><div class="v"><span class="prio" style="width:8px;height:8px;background:'+(PRIOC[n.p]||"#8b8f96")+'"></span>'+esc(n.p)+'</div></div>'+
         '<div><div class="k">Statut</div><div class="v"><span class="chip '+statusClass(n.st)+'">'+esc(n.st)+'</span></div></div>'+
         '<div><div class="k">Date</div><div class="v">'+esc(n.d||"—")+'</div></div>'+
       '</div>';

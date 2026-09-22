@@ -44,7 +44,7 @@
     background:var(--accent);vertical-align:middle}
 
   /* hero */
-  .hero{padding:64px 0 30px;border-bottom:1px solid var(--line)}
+  .hero{padding:60px 0 30px;border-bottom:1px solid var(--line)}
   .hero h1{font-family:var(--disp);font-weight:800;color:var(--accent);text-transform:lowercase;
     margin:0;font-size:clamp(46px,10.5vw,104px);line-height:.9;letter-spacing:-.03em}
   .lede{max-width:60ch;margin:22px 0 0;color:var(--ink-soft);font-size:clamp(15px,2.2vw,18px)}
