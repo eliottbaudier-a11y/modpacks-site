@@ -333,18 +333,7 @@
   var ROT=["-1.4deg","1deg","-2deg","1.6deg","-1deg","2deg","-1.8deg","1.2deg"];
   var SIZES=["s","m","xs","t","w","s","m","xs","t","s"];
 
-  var SEED=[
-    {t:"La cité d'Aurifer",a:"Aurifer",role:"Maître constructeur",d:"22 septembre 2026",c:"Construction",x:"Le quartier central, entièrement fait main, pierre par pierre.",z:"X 1248 · Y 72 · Z −384"},
-    {t:"Lever de soleil sur la baie",a:"Le Roi des Chauves",role:"Explorateur",d:"20 septembre 2026",c:"Paysage",x:"Juste avant de repartir plein est.",z:"X −540 · Y 68 · Z 112"},
-    {t:"Face au Dragon de l'End",a:"Le Roi des Chauves",role:"Explorateur",d:"18 septembre 2026",c:"Aventure",x:"Le 67e. Mais qui les compte encore.",z:"The End"},
-    {t:"Le coffre aux diamants",a:"Flappeurd",role:"Enutrof",d:"21 septembre 2026",c:"Moments drôles",x:"Ne pas toucher. Vraiment.",z:"X 12 · Y 11 · Z 44"},
-    {t:"Cathédrale de pierre",a:"Aurifer",role:"Maître constructeur",d:"15 septembre 2026",c:"Construction",x:"Trois semaines de travail, zéro regret.",z:"X 260 · Y 80 · Z −1190"},
-    {t:"Grottes luisantes",a:"Le Roi des Chauves",role:"Explorateur",d:"14 septembre 2026",c:"Exploration",x:"Des géodes d'améthyste à perte de vue.",z:"X −88 · Y −24 · Z 902"},
-    {t:"Ferme à fer",a:"Aurifer",role:"Maître constructeur",d:"12 septembre 2026",c:"Construction",x:"Rendement industriel, esthétique soignée.",z:"X 300 · Y 64 · Z −1250"},
-    {t:"Nuit au village",a:"Flappeurd",role:"Enutrof",d:"10 septembre 2026",c:"Paysage",x:"Tranquille… tant que les phantoms dorment.",z:"X 640 · Y 70 · Z −20"},
-    {t:"Portail du Nether",a:"Le Roi des Chauves",role:"Explorateur",d:"8 septembre 2026",c:"Exploration",x:"Direction les forteresses.",z:"X 20 · Y 66 · Z −4"},
-    {t:"Renards des neiges",a:"Flappeurd",role:"Enutrof",d:"6 septembre 2026",c:"Animaux",x:"Apprivoisés à la baie glacée.",z:"X −900 · Y 90 · Z 1500"}
-  ];
+  var SEED=[];
 
   var LSKEY="gallery:add:v1";
   function loadAdded(){try{return JSON.parse(localStorage.getItem(LSKEY))||[];}catch(e){return [];}}
@@ -362,13 +351,30 @@
   }
 
   /* ---- cover (hero) ---- */
-  var cov=SEED[0];
-  document.getElementById("coverScene").style.background=SCENE[cov.c];
-  document.getElementById("coverTag").textContent=cov.c;
-  document.getElementById("coverTitle").textContent=cov.t;
-  document.getElementById("coverWho").innerHTML=esc(cov.a)+"<b>"+esc(cov.role||"")+"</b>";
-  document.getElementById("coverCo").innerHTML=esc(cov.d)+"<br>"+esc(cov.z||"");
-  document.getElementById("cover").addEventListener("click",function(){openList([cov],0);});
+  var cover=document.getElementById("cover"), coverArch=cover.querySelector(".arch");
+  var cov=null;
+  function updateCover(){
+    var items=allItems();
+    cov=items.length?items[0]:null;
+    if(!cov){
+      document.getElementById("coverScene").style.background=SCENE.Autres;
+      document.getElementById("coverTag").textContent="";
+      coverArch.textContent="EN ATTENTE";
+      document.getElementById("coverTitle").textContent="Aucune capture pour l'instant";
+      document.getElementById("coverWho").innerHTML="<b>Sois le premier à archiver un souvenir</b>";
+      document.getElementById("coverCo").innerHTML="";
+      cover.style.cursor="default";
+      return;
+    }
+    document.getElementById("coverScene").style.background=SCENE[cov.c]||SCENE.Autres;
+    document.getElementById("coverTag").textContent=cov.c;
+    coverArch.textContent="ARCHIVE 001";
+    document.getElementById("coverTitle").textContent=cov.t;
+    document.getElementById("coverWho").innerHTML=esc(cov.a)+"<b>"+esc(cov.role||"")+"</b>";
+    document.getElementById("coverCo").innerHTML=esc(cov.d)+"<br>"+esc(cov.z||"");
+    cover.style.cursor="pointer";
+  }
+  cover.addEventListener("click",function(){if(cov)openList([cov],0);});
 
   /* ---- board ---- */
   var board=document.getElementById("board"), gcount=document.getElementById("gcount");
@@ -403,6 +409,13 @@
     return el;
   }
   function voidEl(){var el=document.createElement("div");el.className="void";return el;}
+  function emptyEl(){
+    var el=document.createElement("div");
+    el.style.cssText="grid-column:1/-1;grid-row:span 5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:20px";
+    el.innerHTML='<span style="font-family:var(--disp);font-weight:700;font-size:clamp(18px,2.4vw,26px);color:var(--ink-soft)">Aucune capture archivée pour l\'instant</span>'+
+      '<span style="font-family:var(--mono);font-size:12px;color:var(--ink-faint)">Ajoute la première avec « + Ajouter un screenshot »</span>';
+    return el;
+  }
 
   var io=('IntersectionObserver' in window)?new IntersectionObserver(function(es){
     es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});
@@ -410,15 +423,20 @@
 
   function render(){
     var items=allItems();
+    updateCover();
     view=items.filter(function(it){return active==="Tout"||it.c===active;});
     board.innerHTML="";
     var frag=document.createDocumentFragment();
-    view.forEach(function(it,i){
-      frag.appendChild(shotEl(it,i));
-      if(i===1) frag.appendChild(annoEl("season",i));
-      if(i===4) frag.appendChild(voidEl());
-      if(i===6) frag.appendChild(annoEl("coord",i));
-    });
+    if(view.length===0){
+      frag.appendChild(emptyEl());
+    } else {
+      view.forEach(function(it,i){
+        frag.appendChild(shotEl(it,i));
+        if(i===1) frag.appendChild(annoEl("season",i));
+        if(i===4) frag.appendChild(voidEl());
+        if(i===6) frag.appendChild(annoEl("coord",i));
+      });
+    }
     board.appendChild(frag);
     gcount.textContent="// "+view.length+" capture"+(view.length>1?"s":"")+(active==="Tout"?"":" · "+active.toLowerCase());
     var kids=[].slice.call(board.children);
