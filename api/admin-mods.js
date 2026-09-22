@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { action, packId, mod, slug } = req.body || {};
+  const { action, packId, mod, mods, slug } = req.body || {};
 
   if (!packId || !/^[a-z0-9-]+$/.test(packId)) {
     res.status(400).json({ error: 'packId invalide' });
@@ -67,20 +67,8 @@ export default async function handler(req, res) {
     return;
   }
 
-  let commitMsg;
-  if (action === 'remove') {
-    if (!slug) { res.status(400).json({ error: 'slug manquant' }); return; }
-    const before = list.length;
-    list = list.filter((m) => String(m.sl || '').toLowerCase() !== String(slug).toLowerCase());
-    if (list.length === before) { res.status(404).json({ error: 'mod introuvable dans ce pack' }); return; }
-    commitMsg = `admin: retire ${slug} de ${packId}`;
-  } else if (action === 'add') {
-    if (!mod || !mod.sl || !mod.n) { res.status(400).json({ error: 'mod invalide (nom/slug requis)' }); return; }
-    if (list.some((m) => String(m.sl || '').toLowerCase() === String(mod.sl).toLowerCase())) {
-      res.status(409).json({ error: 'ce mod est deja dans la liste' });
-      return;
-    }
-    const clean = {
+  function cleanMod(mod) {
+    return {
       n: String(mod.n).slice(0, 200),
       c: String(mod.c || '').slice(0, 100),
       e: String(mod.e || '🧩').slice(0, 8),
@@ -93,9 +81,54 @@ export default async function handler(req, res) {
       sl: String(mod.sl).slice(0, 200),
       t: String(mod.t || 'mod').slice(0, 40),
       i: mod.i ? String(mod.i).slice(0, 500) : null,
+      // donnees resolues via l'API Modrinth (version compatible mc+loader) :
+      mver: mod.mver ? String(mod.mver).slice(0, 80) : null,
+      furl: mod.furl ? String(mod.furl).slice(0, 500) : null,
+      fname: mod.fname ? String(mod.fname).slice(0, 200) : null,
+      fsize: Number.isFinite(mod.fsize) ? mod.fsize : null,
+      vid: mod.vid ? String(mod.vid).slice(0, 60) : null,
+      mcv: mod.mcv ? String(mod.mcv).slice(0, 40) : null,
+      ld: mod.ld ? String(mod.ld).slice(0, 40) : null,
+      autoAdded: !!mod.autoAdded,
+      reqBy: mod.reqBy ? String(mod.reqBy).slice(0, 200) : null,
     };
+  }
+
+  let commitMsg;
+  let batchInfo = null;
+  if (action === 'remove') {
+    if (!slug) { res.status(400).json({ error: 'slug manquant' }); return; }
+    const before = list.length;
+    list = list.filter((m) => String(m.sl || '').toLowerCase() !== String(slug).toLowerCase());
+    if (list.length === before) { res.status(404).json({ error: 'mod introuvable dans ce pack' }); return; }
+    commitMsg = `admin: retire ${slug} de ${packId}`;
+  } else if (action === 'add') {
+    if (!mod || !mod.sl || !mod.n) { res.status(400).json({ error: 'mod invalide (nom/slug requis)' }); return; }
+    if (list.some((m) => String(m.sl || '').toLowerCase() === String(mod.sl).toLowerCase())) {
+      res.status(409).json({ error: 'ce mod est deja dans la liste' });
+      return;
+    }
+    const clean = cleanMod(mod);
     list.push(clean);
     commitMsg = `admin: ajoute ${clean.sl} a ${packId}`;
+  } else if (action === 'addBatch') {
+    if (!Array.isArray(mods) || !mods.length) { res.status(400).json({ error: 'mods (tableau) requis' }); return; }
+    const existing = new Set(list.map((m) => String(m.sl || '').toLowerCase()));
+    const added = [];
+    const skipped = [];
+    for (const m of mods) {
+      if (!m || !m.sl || !m.n) { skipped.push(m && m.sl); continue; }
+      const key = String(m.sl).toLowerCase();
+      if (existing.has(key)) { skipped.push(m.sl); continue; }
+      existing.add(key);
+      const clean = cleanMod(m);
+      list.push(clean);
+      added.push(clean.sl);
+    }
+    if (!added.length) { res.status(409).json({ error: 'tous les mods sont deja dans la liste', skipped }); return; }
+    const label = added.length > 5 ? added.slice(0, 5).join(', ') + ` (+${added.length - 5})` : added.join(', ');
+    commitMsg = `admin: ajoute ${label} a ${packId}`;
+    batchInfo = { added, skipped };
   } else if (action === 'edit') {
     if (!slug || !mod) { res.status(400).json({ error: 'slug et mod requis' }); return; }
     const idx = list.findIndex((m) => String(m.sl || '').toLowerCase() === String(slug).toLowerCase());
@@ -114,7 +147,7 @@ export default async function handler(req, res) {
     list[idx] = merged;
     commitMsg = `admin: modifie ${slug} dans ${packId}`;
   } else {
-    res.status(400).json({ error: 'action inconnue (add|remove|edit attendu)' });
+    res.status(400).json({ error: 'action inconnue (add|addBatch|remove|edit attendu)' });
     return;
   }
 
@@ -132,5 +165,5 @@ export default async function handler(req, res) {
     return;
   }
 
-  res.status(200).json({ ok: true, count: list.length });
+  res.status(200).json({ ok: true, count: list.length, ...(batchInfo ? { batch: batchInfo } : {}) });
 }

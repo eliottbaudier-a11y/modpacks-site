@@ -146,6 +146,7 @@
     text-decoration:none;color:var(--accent-ink);background:var(--accent);border:1px solid var(--accent);
     padding:8px 13px;white-space:nowrap;transition:filter .12s}
   .dl-btn:hover{filter:brightness(1.06)}
+  .dl-btn.loading{pointer-events:none;filter:brightness(.9);cursor:wait}
   .dl-btn svg{width:15px;height:15px;flex:none}
   #totop{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));
     bottom:calc(20px + env(safe-area-inset-bottom,0px));width:44px;height:44px;display:grid;place-items:center;

@@ -56,8 +56,14 @@
 
     var dl = document.getElementById('dl');
     if (dl) {
-      if (PACK.download) { dl.href = PACK.download; dl.style.display = ''; }
-      else dl.style.display = 'none';
+      if (PACK.download) {
+        dl.href = PACK.download; dl.style.display = '';
+      } else if (MODS.some(function (m) { return m.furl && m.fname; })) {
+        setupDynamicDownload(dl, MODS);
+        dl.style.display = '';
+      } else {
+        dl.style.display = 'none';
+      }
     }
 
     var grid = document.getElementById('grid'), q = document.getElementById('q');
@@ -120,11 +126,12 @@
       var type = (m.t && m.t !== 'mod') ? '<span class="dot">·</span><span>' + esc(m.t) + '</span>' : '';
       var side = m.s ? '<span class="dot">·</span><span>' + esc(m.s.toLowerCase()) + '</span>' : '';
       var dep = m.dep ? '<p class="cdep"><b>dépend</b> — ' + esc(m.dep) + '</p>' : '';
+      var ver = m.mver ? '<p class="cdep" style="opacity:.75"><b>' + esc((m.ld || '') + ' ' + (m.mcv || '')) + '</b> — v' + esc(m.mver) + ' <span style="color:var(--ok)">✓ compatible</span></p>' : '';
       var st = (m.st && !/tester/i.test(m.st)) ? '<span class="status ' + statusCls(m.st) + '">' + esc(m.st) + '</span>' : '';
       return '<article class="card"><div class="ctop"><div class="icon">' + icon + '</div>' +
         '<div style="min-width:0;flex:1"><div class="cname">' + esc(m.n) + '</div>' +
         '<div class="cmeta"><span class="sw" style="background:' + col + '"></span><span>' + esc(m.c) + '</span>' + type + side + '</div>' +
-        '</div>' + st + '</div><p class="cdesc">' + esc(m.d || '') + '</p>' + dep +
+        '</div>' + st + '</div><p class="cdesc">' + esc(m.d || '') + '</p>' + dep + ver +
         '<a class="go" href="' + esc(m.u) + '" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
     }
     function render() {
@@ -300,6 +307,43 @@
     });
 
     renderMy();
+  }
+
+  /* ================= telechargement dynamique (ZIP via Modrinth) ================= */
+  function setupDynamicDownload(dl, MODS) {
+    dl.removeAttribute('download');
+    dl.setAttribute('href', '#');
+    var label = dl.querySelector('.t');
+    var orig = label ? label.textContent : 'Tout télécharger';
+    var busy = false;
+    dl.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (busy) return;
+      if (typeof JSZip === 'undefined' || typeof window.buildAndDownloadZip !== 'function') {
+        alert("Le générateur de ZIP n'a pas pu se charger — vérifie ta connexion et réessaie.");
+        return;
+      }
+      busy = true; dl.classList.add('loading');
+      window.buildAndDownloadZip(PACK.name, MODS, function (p) {
+        if (!label) return;
+        if (p.phase === 'download') label.textContent = 'Téléchargement… ' + p.done + '/' + p.total;
+        else if (p.phase === 'zip') label.textContent = 'Compression du ZIP…' + (p.percent ? ' ' + Math.round(p.percent) + '%' : '');
+      }).then(function (res) {
+        busy = false; dl.classList.remove('loading');
+        if (label) label.textContent = orig;
+        if (!res.ok) { alert('Échec : ' + res.error); return; }
+        if (res.failed.length || res.skipped.length) {
+          alert('ZIP téléchargé (' + res.included + ' mods). ' +
+            (res.failed.length ? res.failed.length + ' fichier(s) ont échoué. ' : '') +
+            (res.skipped.length ? res.skipped.length + ' mod(s) sans fichier résolu. ' : '') +
+            'Détails dans MANQUANTS.txt, à l\'intérieur du ZIP.');
+        }
+      }).catch(function (err) {
+        busy = false; dl.classList.remove('loading');
+        if (label) label.textContent = orig;
+        alert('Erreur inattendue pendant la préparation du ZIP : ' + (err && err.message || err));
+      });
+    });
   }
 
   /* ================= utilitaires ================= */
