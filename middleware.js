@@ -25,6 +25,13 @@ async function hmacHex(message, secret) {
   return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 async function isValidToken(token, secret) {
   if (!token || !secret) return false;
   const dot = token.lastIndexOf('.');
@@ -34,7 +41,7 @@ async function isValidToken(token, secret) {
   const expNum = Number(exp);
   if (!expNum || Date.now() / 1000 > expNum) return false;
   const expected = await hmacHex(exp, secret);
-  return expected === sig;
+  return timingSafeEqual(expected, sig);
 }
 
 export default async function middleware(request) {

@@ -121,7 +121,7 @@
     function card(m) {
       var col = CATC[m.c] || '#8b8f96';
       var emoji = m.e || '🧩';
-      var icon = m.i ? '<img src="' + m.i + '" alt="" loading="lazy" data-col="' + col + '" data-emoji="' + emoji + '">'
+      var icon = m.i ? '<img src="' + esc(m.i) + '" alt="" loading="lazy" data-col="' + esc(col) + '" data-emoji="' + esc(emoji) + '">'
         : phTile(col, emoji, m.sl);
       var type = (m.t && m.t !== 'mod') ? '<span class="dot">·</span><span>' + esc(m.t) + '</span>' : '';
       var side = m.s ? '<span class="dot">·</span><span>' + esc(m.s.toLowerCase()) + '</span>' : '';
@@ -129,7 +129,7 @@
       var ver = m.mver ? '<p class="cdep" style="opacity:.75"><b>' + esc((m.ld || '') + ' ' + (m.mcv || '')) + '</b> — v' + esc(m.mver) + ' <span style="color:var(--ok)">✓ compatible</span></p>' : '';
       var st = (m.st && !/tester/i.test(m.st)) ? '<span class="status ' + statusCls(m.st) + '">' + esc(m.st) + '</span>' : '';
       return '<article class="card"><div class="ctop"><div class="icon">' + icon + '</div>' +
-        '<div style="min-width:0;flex:1"><div class="cname">' + esc(m.n) + '</div>' +
+        '<div style="min-width:120px;flex:1"><div class="cname">' + esc(m.n) + '</div>' +
         '<div class="cmeta"><span class="sw" style="background:' + col + '"></span><span>' + esc(m.c) + '</span>' + type + side + '</div>' +
         '</div>' + st + '</div><p class="cdesc">' + esc(m.d || '') + '</p>' + dep + ver +
         '<a class="go" href="' + esc(m.u) + '" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
@@ -178,7 +178,14 @@
       var it = queue.shift(); inflight++;
       (function (ph, slug) {
         getIcon(slug).then(function (url) {
-          if (url && ph.isConnected) { var img = new Image(); img.onload = function () { ph.outerHTML = '<img src="' + url + '" alt="">'; }; img.src = url; }
+          if (url && ph.isConnected) {
+            var col = ph.dataset.col || '#8b8f96', emoji = ph.dataset.emoji || '🧩';
+            var img = new Image();
+            img.onload = function () {
+              ph.outerHTML = '<img src="' + esc(url) + '" alt="" data-col="' + esc(col) + '" data-emoji="' + esc(emoji) + '">';
+            };
+            img.src = url;
+          }
         }).catch(function () { }).finally(function () { inflight--; pump(); });
       })(it.ph, it.slug);
     }
@@ -190,10 +197,11 @@
     }).then(function (j) { var url = j.icon_url || null; try { localStorage.setItem('mr:' + slug, url || '0'); } catch (e) { } return url; });
   }
   function phTile(col, emoji, slug) {
-    return '<div class="ph" style="--pc:' + col + '"' + (slug ? ' data-slug="' + slug + '"' : '') + '><span>' + (emoji || '🧩') + '</span></div>';
+    return '<div class="ph" style="--pc:' + esc(col) + '" data-col="' + esc(col) + '" data-emoji="' + esc(emoji || '🧩') + '"' +
+      (slug ? ' data-slug="' + esc(slug) + '"' : '') + '><span>' + (emoji || '🧩') + '</span></div>';
   }
   function iconHTML(url, col, emoji, slug) {
-    if (url) return '<img src="' + url + '" alt="" loading="lazy" data-col="' + col + '" data-emoji="' + (emoji || '🧩') + '">';
+    if (url) return '<img src="' + esc(url) + '" alt="" loading="lazy" data-col="' + esc(col) + '" data-emoji="' + esc(emoji || '🧩') + '">';
     return phTile(col, emoji, slug);
   }
   document.addEventListener('error', function (e) {
@@ -226,7 +234,8 @@
     function slugFrom(x) {
       x = (x || '').trim();
       var m = x.match(/modrinth\.com\/[a-z]+\/([^\/?#]+)/i);
-      return (m ? m[1] : x).replace(/^@/, '').trim();
+      if (m) return m[1].replace(/^@/, '').trim();
+      return /^[a-z0-9][a-z0-9_-]{1,63}$/i.test(x) ? x : '';
     }
     function sideLabel(cs, ss) {
       var c = cs && cs !== 'unsupported', s = ss && ss !== 'unsupported';
@@ -241,7 +250,7 @@
       var catname = it.cat || 'non classé';
       return '<article class="card"><button class="rm" title="Retirer du pack" data-i="' + idx + '">✕</button>' +
         '<div class="ctop"><div class="icon">' + icon + '</div>' +
-        '<div style="min-width:0;flex:1"><div class="cname">' + esc(it.name) + '</div>' +
+        '<div style="min-width:120px;flex:1"><div class="cname">' + esc(it.name) + '</div>' +
         '<div class="cmeta"><span class="sw" style="background:' + col + '"></span><span>' + esc(catname) + '</span>' + type + side + '</div>' +
         '</div></div><p class="cdesc">' + esc(it.desc || '') + '</p>' +
         '<a class="go" href="' + esc(it.url) + '" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
@@ -259,8 +268,8 @@
     });
 
     function addOne(raw) {
-      var slug = slugFrom(raw); if (!slug) return Promise.resolve(false);
-      if (myPack.some(function (x) { return x.slug.toLowerCase() === slug.toLowerCase(); })) return Promise.resolve(true);
+      var slug = slugFrom(raw); if (!slug) return Promise.resolve('invalid');
+      if (myPack.some(function (x) { return x.slug.toLowerCase() === slug.toLowerCase(); })) return Promise.resolve('dup');
       var cat = catSel.value || '';
       var it = { slug: slug, name: pretty(slug), desc: '', type: 'mod', side: '', cat: cat, url: 'https://modrinth.com/mod/' + slug, icon: '' };
       return fetch('https://api.modrinth.com/v2/project/' + encodeURIComponent(slug)).then(function (r) {
@@ -270,18 +279,24 @@
         it.type = j.project_type || 'mod'; it.icon = j.icon_url || '';
         it.side = sideLabel(j.client_side, j.server_side);
         it.url = 'https://modrinth.com/' + (j.project_type || 'mod') + '/' + (j.slug || slug);
-        myPack.push(it); saveMy(); renderMy(); return true;
-      }).catch(function () { myPack.push(it); saveMy(); renderMy(); return false; });
+        myPack.push(it); saveMy(); renderMy(); return 'full';
+      }).catch(function () { myPack.push(it); saveMy(); renderMy(); return 'partial'; });
     }
     function addFromInput() {
+      if (addBtn.disabled) return;
       var raw = urlIn.value.trim(); if (!raw) { urlIn.focus(); return; }
       var parts = raw.split(/[\s,]+/).filter(Boolean);
       addBtn.disabled = true; errEl.textContent = '';
-      var chain = Promise.resolve(false);
-      parts.forEach(function (p) { chain = chain.then(function (any) { return addOne(p).then(function (r) { return any || r; }); }); });
-      chain.then(function (anyOk) {
+      var chain = Promise.resolve([]);
+      parts.forEach(function (p) { chain = chain.then(function (acc) { return addOne(p).then(function (r) { acc.push(r); return acc; }); }); });
+      chain.then(function (results) {
         addBtn.disabled = false; urlIn.value = ''; urlIn.focus();
-        if (!anyOk) errEl.textContent = "mods ajoutés depuis le lien, mais les infos Modrinth n'ont pas pu être chargées ici — sur le site en ligne, nom, icône et description se rempliront tout seuls.";
+        var allInvalid = results.length > 0 && results.every(function (r) { return r === 'invalid'; });
+        if (allInvalid) {
+          errEl.textContent = 'lien invalide — colle un lien Modrinth (ex : https://modrinth.com/mod/sodium).';
+        } else if (results.some(function (r) { return r === 'partial'; })) {
+          errEl.textContent = "mods ajoutés depuis le lien, mais les infos Modrinth n'ont pas pu être chargées ici — sur le site en ligne, nom, icône et description se rempliront tout seuls.";
+        }
       });
     }
     addBtn.addEventListener('click', addFromInput);

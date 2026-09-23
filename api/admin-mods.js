@@ -4,6 +4,13 @@
    (GITHUB_REPO, format "owner/repo") sont des variables d'env Vercel,
    jamais exposées au client. */
 
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
@@ -14,7 +21,7 @@ export default async function handler(req, res) {
 
   const password = req.headers['x-admin-password'];
   const expected = String(process.env.ADMIN_PASSWORD || '').trim();
-  if (!password || String(password).trim() !== expected) {
+  if (!password || !expected || !timingSafeEqual(String(password).trim(), expected)) {
     res.status(401).json({ error: 'mot de passe incorrect' });
     return;
   }

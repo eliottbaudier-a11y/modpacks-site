@@ -52,7 +52,14 @@ window.buildAndDownloadZip = (function () {
     await fetchWithLimit(order, 5, async function (key) {
       var item = byFile[key];
       try {
-        var r = await fetch(item.url);
+        var controller = new AbortController();
+        var timer = setTimeout(function () { controller.abort(); }, 30000);
+        var r;
+        try {
+          r = await fetch(item.url, { signal: controller.signal });
+        } finally {
+          clearTimeout(timer);
+        }
         if (!r.ok) throw new Error('http_' + r.status);
         var buf = await r.arrayBuffer();
         zip.file(item.filename, buf);

@@ -5,6 +5,13 @@ import crypto from 'node:crypto';
 
 const SEVEN_DAYS = 60 * 60 * 24 * 7;
 
+function timingSafeEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
@@ -15,8 +22,10 @@ export default async function handler(req, res) {
 
   const { username, password } = req.body || {};
   const expectedPass = String(process.env.ADMIN_PASSWORD || '').trim();
+  const userOk = String(username || '').trim() === 'admin';
+  const passOk = timingSafeEqual(String(password || '').trim(), expectedPass);
 
-  if (!expectedPass || String(username || '').trim() !== 'admin' || String(password || '').trim() !== expectedPass) {
+  if (!expectedPass || !userOk || !passOk) {
     res.status(401).json({ error: 'identifiant ou mot de passe incorrect' });
     return;
   }
