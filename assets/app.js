@@ -54,10 +54,24 @@
     var meta = document.getElementById('meta');
     if (meta) meta.innerHTML = chips.map(function (c) { return '<span>' + esc(c) + '</span>'; }).join('');
 
+    var compatWrap = document.getElementById('compatBadges');
+    if (compatWrap) {
+      var badges = [];
+      if (PACK.mcVersion) badges.push('<span class="badge">Minecraft <b>' + esc(PACK.mcVersion) + '</b></span>');
+      if (PACK.loader) badges.push('<span class="badge">Loader <b>' + esc(PACK.loader) + '</b></span>');
+      badges.push('<span class="badge">Mods <b>' + MODS.length + '</b></span>');
+      var incompat = MODS.filter(function (m) { return /incompat/i.test(m.st || ''); }).length;
+      badges.push(incompat
+        ? '<span class="badge warn">⚠ ' + incompat + ' mod' + (incompat > 1 ? 's' : '') + ' à vérifier</span>'
+        : '<span class="badge ok">✓ Tous les mods vérifiés</span>');
+      compatWrap.innerHTML = badges.join('');
+    }
+
     var dl = document.getElementById('dl');
     if (dl) {
       if (PACK.download) {
-        dl.href = PACK.download; dl.style.display = '';
+        setupStaticDownload(dl, PACK.download, PACK.name, MODS.length);
+        dl.style.display = '';
       } else if (MODS.some(function (m) { return m.furl && m.fname; })) {
         setupDynamicDownload(dl, MODS);
         dl.style.display = '';
@@ -132,7 +146,8 @@
         '<div style="min-width:120px;flex:1"><div class="cname">' + esc(m.n) + '</div>' +
         '<div class="cmeta"><span class="sw" style="background:' + col + '"></span><span>' + esc(m.c) + '</span>' + type + side + '</div>' +
         '</div>' + st + '</div><p class="cdesc">' + esc(m.d || '') + '</p>' + dep + ver +
-        '<a class="go" href="' + esc(m.u) + '" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
+        '<div class="cfoot"><a class="go" href="' + esc(m.u) + '" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a>' +
+        '<button type="button" class="mini-copy" data-url="' + esc(m.u) + '" title="Copier le lien Modrinth" aria-label="Copier le lien Modrinth">🔗</button></div></article>';
     }
     function render() {
       var t = q.value.trim().toLowerCase();
@@ -148,6 +163,13 @@
       loadIcons();
     }
     render();
+
+    grid.addEventListener('click', function (e) {
+      var b = e.target.closest('.mini-copy'); if (!b) return;
+      var url = b.dataset.url;
+      navigator.clipboard.writeText(url).then(function () { notify('✓ Lien copié'); })
+        .catch(function () { notify('⚠ Impossible de copier le lien', 'warn'); });
+    });
 
     /* ---- créateur de pack (perso, localStorage) ---- */
     initBuilder();
@@ -324,39 +346,108 @@
     renderMy();
   }
 
+  /* ================= telechargement statique (lien direct, ex: Release GitHub) ================= */
+  function notify(msg, type) { if (window.toast) window.toast(msg, type); }
+
+  function setupStaticDownload(dl, url, packName, modsCount) {
+    dl.removeAttribute('download');
+    dl.setAttribute('href', '#');
+    var label = dl.querySelector('.t'), bar = dl.querySelector('.dl-bar');
+    var orig = label ? label.textContent : 'Tout télécharger';
+    var busy = false;
+    function reset() {
+      busy = false; dl.classList.remove('loading');
+      if (label) label.textContent = orig;
+      if (bar) bar.style.width = '0%';
+    }
+    function nativeFallback() {
+      var a = document.createElement('a');
+      a.href = url; a.download = ''; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    dl.addEventListener('click', function (e) {
+      e.preventDefault();
+      if (busy) return;
+      busy = true; dl.classList.add('loading');
+      if (label) label.textContent = 'Préparation du téléchargement…';
+      if (bar) bar.style.width = '0%';
+      fetch(url).then(function (r) {
+        if (!r.ok) throw new Error('http_' + r.status);
+        var total = +r.headers.get('content-length') || 0;
+        if (!r.body || !r.body.getReader) return r.blob();
+        var reader = r.body.getReader(), chunks = [], received = 0;
+        return (function pump() {
+          return reader.read().then(function (res) {
+            if (res.done) return new Blob(chunks);
+            chunks.push(res.value); received += res.value.length;
+            var pct = total ? Math.round(received / total * 100) : null;
+            if (label) label.textContent = pct != null ? 'Téléchargement des mods… ' + pct + '%' : 'Téléchargement des mods…';
+            if (bar) bar.style.width = (pct || 0) + '%';
+            return pump();
+          });
+        })();
+      }).then(function (blob) {
+        var name = (url.split('/').pop() || (packName + '.zip')).split('?')[0] || 'modpack.zip';
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        if (bar) bar.style.width = '100%';
+        if (label) label.textContent = '✓ Modpack prêt';
+        notify('✓ Modpack téléchargé — ' + modsCount + ' mods, 0 erreur');
+        setTimeout(reset, 1500);
+      }).catch(function () {
+        /* repli : telechargement natif du navigateur (fonctionne meme si le fetch cross-origine est bloque) */
+        nativeFallback();
+        reset();
+        notify('Téléchargement lancé…');
+      });
+    });
+  }
+
   /* ================= telechargement dynamique (ZIP via Modrinth) ================= */
   function setupDynamicDownload(dl, MODS) {
     dl.removeAttribute('download');
     dl.setAttribute('href', '#');
-    var label = dl.querySelector('.t');
+    var label = dl.querySelector('.t'), bar = dl.querySelector('.dl-bar');
     var orig = label ? label.textContent : 'Tout télécharger';
     var busy = false;
+    function reset() {
+      busy = false; dl.classList.remove('loading');
+      if (label) label.textContent = orig;
+      if (bar) bar.style.width = '0%';
+    }
     dl.addEventListener('click', function (e) {
       e.preventDefault();
       if (busy) return;
       if (typeof JSZip === 'undefined' || typeof window.buildAndDownloadZip !== 'function') {
-        alert("Le générateur de ZIP n'a pas pu se charger — vérifie ta connexion et réessaie.");
+        notify("⚠ Le générateur de ZIP n'a pas pu se charger — vérifie ta connexion et réessaie.", 'warn');
         return;
       }
       busy = true; dl.classList.add('loading');
+      if (label) label.textContent = 'Préparation du téléchargement…';
+      if (bar) bar.style.width = '0%';
       window.buildAndDownloadZip(PACK.name, MODS, function (p) {
-        if (!label) return;
-        if (p.phase === 'download') label.textContent = 'Téléchargement… ' + p.done + '/' + p.total;
-        else if (p.phase === 'zip') label.textContent = 'Compression du ZIP…' + (p.percent ? ' ' + Math.round(p.percent) + '%' : '');
-      }).then(function (res) {
-        busy = false; dl.classList.remove('loading');
-        if (label) label.textContent = orig;
-        if (!res.ok) { alert('Échec : ' + res.error); return; }
-        if (res.failed.length || res.skipped.length) {
-          alert('ZIP téléchargé (' + res.included + ' mods). ' +
-            (res.failed.length ? res.failed.length + ' fichier(s) ont échoué. ' : '') +
-            (res.skipped.length ? res.skipped.length + ' mod(s) sans fichier résolu. ' : '') +
-            'Détails dans MANQUANTS.txt, à l\'intérieur du ZIP.');
+        if (p.phase === 'download') {
+          var pct = Math.round(p.done / p.total * 100);
+          if (label) label.textContent = 'Téléchargement des mods… ' + pct + '%';
+          if (bar) bar.style.width = pct + '%';
+        } else if (p.phase === 'zip') {
+          if (label) label.textContent = 'Compression du ZIP…' + (p.percent ? ' ' + Math.round(p.percent) + '%' : '');
+          if (bar && p.percent) bar.style.width = Math.round(p.percent) + '%';
         }
-      }).catch(function (err) {
-        busy = false; dl.classList.remove('loading');
-        if (label) label.textContent = orig;
-        alert('Erreur inattendue pendant la préparation du ZIP : ' + (err && err.message || err));
+      }).then(function (res) {
+        if (!res.ok) { reset(); notify('⚠ Échec : ' + res.error, 'warn'); return; }
+        if (bar) bar.style.width = '100%';
+        if (label) label.textContent = '✓ Modpack prêt';
+        var errCount = res.failed.length + res.skipped.length;
+        notify(errCount
+          ? '⚠ Modpack téléchargé — ' + res.included + ' mods, ' + errCount + ' erreur' + (errCount > 1 ? 's' : '') + ' (détails dans MANQUANTS.txt)'
+          : '✓ Modpack téléchargé — ' + res.included + ' mods, 0 erreur', errCount ? 'warn' : null);
+        setTimeout(reset, 1500);
+      }).catch(function () {
+        reset();
+        notify('⚠ Erreur inattendue pendant la préparation du ZIP.', 'warn');
       });
     });
   }

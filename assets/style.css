@@ -1,3 +1,15 @@
+/* transitions douces entre pages (no-op si le navigateur ne les supporte pas) */
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.22s;animation-timing-function:cubic-bezier(.2,.7,.2,1)}
+@media (prefers-reduced-motion:reduce){
+  ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}
+
+/* apparition progressive au scroll (utilisé sur plusieurs pages) */
+.reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
 :root{
     box-sizing:border-box;
     padding-top:env(safe-area-inset-top,0px);
@@ -53,6 +65,17 @@
   .statline b{color:var(--accent);font-weight:700}
   .statline i{color:var(--ink-faint);font-style:normal}
 
+  /* badges de compatibilité (page modpack) */
+  .compat-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .badge{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.02em;
+    padding:6px 11px;border:1px solid var(--line);color:var(--ink-soft);background:var(--card);
+    display:inline-flex;align-items:center;gap:6px;text-transform:uppercase;line-height:1;
+    transition:transform .16s ease,border-color .16s ease}
+  .badge:hover{transform:translateY(-1px);border-color:var(--ink-soft)}
+  .badge b{color:var(--ink);font-weight:700;text-transform:none}
+  .badge.ok{color:var(--ok);border-color:var(--ok)}
+  .badge.warn{color:var(--warn);border-color:var(--warn)}
+
   /* controls */
   .controls{padding:26px 0 6px;position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:20;
     background:linear-gradient(var(--paper) 78%,transparent)}
@@ -103,11 +126,15 @@
   /* grid */
   .grid{display:grid;gap:1px;background:var(--line);border:1px solid var(--line);
     grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));margin-bottom:60px}
-  .card{background:var(--card);padding:20px;display:flex;flex-direction:column;position:relative}
-  .card:hover{background:var(--paper)}
+  .card{background:var(--card);padding:20px;display:flex;flex-direction:column;position:relative;
+    transition:transform .22s cubic-bezier(.2,.7,.2,1),box-shadow .22s ease,background .18s ease}
+  .card:hover{background:var(--paper);transform:translateY(-3px);box-shadow:0 14px 30px rgba(0,0,0,.14);z-index:1}
   .ctop{display:flex;gap:14px;align-items:flex-start;margin-bottom:13px;flex-wrap:wrap}
   .icon{width:54px;height:54px;flex:none;overflow:hidden;background:var(--paper);border:1px solid var(--line)}
-  .icon img{width:100%;height:100%;object-fit:cover;display:block}
+  .icon img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .28s ease}
+  .card:hover .icon img{transform:scale(1.08)}
+  .icon .ph span{display:inline-block;transition:transform .28s ease}
+  .card:hover .icon .ph span{transform:scale(1.12) rotate(-4deg)}
   .icon .ph{width:100%;height:100%;display:grid;place-items:center;font-family:var(--disp);font-weight:700;
     font-size:20px;color:#fff}
   .cname{font-family:var(--disp);font-weight:700;font-size:17px;line-height:1.15;margin:1px 0 0;
@@ -125,12 +152,18 @@
   .cdesc{color:var(--ink-soft);font-size:13.5px;margin:0 0 12px;flex:1}
   .cdep{font-family:var(--mono);font-size:10.5px;color:var(--ink-faint);margin:0 0 14px;line-height:1.5}
   .cdep b{color:var(--ink-soft);font-weight:700}
-  .go{align-self:flex-start;margin-top:auto;font-family:var(--body);font-weight:600;font-size:13px;
+  .cfoot{display:flex;align-items:center;gap:10px;margin-top:auto}
+  .go{align-self:flex-start;font-family:var(--body);font-weight:600;font-size:13px;
     text-decoration:none;color:var(--accent);border-bottom:1.5px solid var(--accent);padding-bottom:1px;
     transition:color .18s ease,border-color .18s ease}
   .go:hover{color:var(--ink);border-color:var(--ink)}
   .go .ar{font-family:var(--mono);display:inline-block;transition:transform .18s ease}
   .go:hover .ar{transform:translate(2px,-2px)}
+  .mini-copy{font-size:12px;line-height:1;background:transparent;border:1px solid var(--line);color:var(--ink-soft);
+    padding:4px 7px;cursor:pointer;opacity:0;transition:opacity .18s ease,border-color .18s ease,color .18s ease}
+  .card:hover .mini-copy,.mini-copy:focus-visible{opacity:1}
+  .mini-copy:hover{border-color:var(--ink-soft);color:var(--ink)}
+  @media (hover:none){.mini-copy{opacity:1}}
   .empty{grid-column:1/-1;background:var(--card);text-align:center;color:var(--ink-soft);padding:60px 20px;
     font-family:var(--mono);font-size:13px}
 
@@ -146,10 +179,14 @@
   .hgroup{margin-left:auto;display:flex;align-items:center;gap:16px}
   .dl-btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--body);font-weight:600;font-size:13px;
     text-decoration:none;color:var(--accent-ink);background:var(--accent);border:1px solid var(--accent);
-    padding:8px 13px;white-space:nowrap;transition:filter .2s ease,transform .2s ease,box-shadow .2s ease}
+    padding:8px 13px;white-space:nowrap;transition:filter .2s ease,transform .2s ease,box-shadow .2s ease;
+    position:relative;overflow:hidden}
   .dl-btn:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.16)}
   .dl-btn:active{transform:translateY(0);filter:brightness(1.02);box-shadow:none}
   .dl-btn.loading{pointer-events:none;filter:brightness(.9);cursor:wait}
+  .dl-bar{position:absolute;left:0;bottom:0;height:2.5px;width:0%;background:rgba(255,255,255,.85);
+    transition:width .25s ease;opacity:0}
+  .dl-btn.loading .dl-bar{opacity:1}
   .dl-btn svg{width:15px;height:15px;flex:none;transition:transform .2s ease}
   #dl:hover svg,.m-dl:hover svg{transform:translateY(1.5px)}
   #addBtn:hover svg,#newBtn:hover svg{transform:scale(1.12)}
@@ -161,6 +198,18 @@
   #totop.show:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
   #totop svg{width:20px;height:20px}
   @media (max-width:480px){.dl-btn .t{display:none}.dl-btn{padding:8px 10px}}
+
+  /* ---- notifications toast ---- */
+  .toast-stack{position:fixed;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));
+    display:flex;flex-direction:column;align-items:center;gap:8px;z-index:500;pointer-events:none;padding:0 16px}
+  .toast{pointer-events:auto;max-width:420px;width:max-content;background:var(--ink);color:var(--paper);
+    font-family:var(--body);font-weight:600;font-size:13.5px;padding:11px 16px;border:1px solid var(--line);
+    box-shadow:0 10px 26px rgba(0,0,0,.22);opacity:0;transform:translateY(10px) scale(.98);
+    transition:opacity .22s ease,transform .22s cubic-bezier(.2,.7,.2,1)}
+  .toast.show{opacity:1;transform:none}
+  .toast.warn{background:var(--bad);color:#fff;border-color:var(--bad)}
+  @media (max-width:560px){.toast{max-width:calc(100vw - 32px)}}
+  @media (prefers-reduced-motion:reduce){.toast{transition:opacity .15s ease}}
 
   /* ---- nav + views + emoji placeholder + builder ---- */
   .nav{display:flex;gap:4px;margin-left:16px}
@@ -212,11 +261,16 @@
   @media (max-width:560px){.addbar select{min-width:0;flex:1}.add-btn{flex:1}}
 
   /* ================= page d'accueil : bibliothèque des modpacks ================= */
-  .lib-hero{padding:60px 0 30px;border-bottom:1px solid var(--line)}
+  .lib-hero{padding:60px 0 30px;border-bottom:1px solid var(--line);position:relative}
+  .lib-hero::before{content:"";position:absolute;left:-10%;top:-20%;width:46%;height:160%;z-index:-1;
+    background:radial-gradient(closest-side,color-mix(in srgb,var(--accent) 9%,transparent),transparent 72%);
+    animation:heroGlow 9s ease-in-out infinite}
+  @keyframes heroGlow{0%,100%{opacity:.6;transform:translate(0,0) scale(1)}50%{opacity:1;transform:translate(2%,1.5%) scale(1.06)}}
+  @media (prefers-reduced-motion:reduce){.lib-hero::before{animation:none}}
   .lib-hero .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--ink-faint);margin:0 0 14px}
   .lib-hero h1{font-family:var(--disp);font-weight:800;color:var(--accent);text-transform:lowercase;
-    margin:0;font-size:clamp(46px,10.5vw,104px);line-height:.9;letter-spacing:-.03em}
+    margin:0;font-size:clamp(46px,10.5vw,104px);line-height:.9;letter-spacing:-.03em;position:relative}
   .lib-hero .lede{max-width:60ch;margin:22px 0 0;color:var(--ink-soft);font-size:clamp(15px,2.2vw,18px)}
   .seclabel{font-family:var(--mono);font-size:11.5px;color:var(--ink-faint);padding:34px 0 16px;letter-spacing:.02em}
 

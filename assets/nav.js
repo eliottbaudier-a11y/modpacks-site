@@ -197,8 +197,18 @@
     var liveDl = document.getElementById('dl');
     var mDl = mnav.querySelector('.m-dl');
     if (liveDl && mDl && getComputedStyle(liveDl).display !== 'none') {
-      mDl.href = liveDl.href; mDl.hidden = false;
+      mDl.hidden = false;
     } else if (mDl) { mDl.hidden = true; }
+  }
+  /* le bouton mobile délègue au vrai bouton #dl (progression, garde anti-double-clic, etc.) */
+  var mDlBtn = mnav.querySelector('.m-dl');
+  if (mDlBtn) {
+    mDlBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var liveDl = document.getElementById('dl');
+      closeMobile();
+      if (liveDl) setTimeout(function () { liveDl.click(); }, 260);
+    });
   }
   function openMobile() {
     syncFooter();
@@ -235,5 +245,60 @@
     var first = focusables[0], last = focusables[focusables.length - 1];
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+})();
+
+/* ---- apparition progressive au scroll (générique, sauf pages qui gèrent déjà la leur) ---- */
+(function () {
+  if (window.__revealHandled) return;
+  window.__revealHandled = true;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var revs = [].slice.call(document.querySelectorAll('.reveal'));
+  if (!revs.length) return;
+  if (reduce || !('IntersectionObserver' in window)) {
+    revs.forEach(function (el) { el.classList.add('in'); });
+    return;
+  }
+  revs.forEach(function (el, i) { el.style.transitionDelay = Math.min(i * 60, 240) + 'ms'; });
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: .16, rootMargin: '0px 0px -8% 0px' });
+  revs.forEach(function (el) { io.observe(el); });
+})();
+
+/* ---- petit easter egg discret : tape "diamant" n'importe où sur le site ---- */
+(function () {
+  if (sessionStorage.getItem('egg:diamant')) return;
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var target = 'diamant', pos = 0;
+  document.addEventListener('keydown', function (e) {
+    var el = document.activeElement;
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) return;
+    var k = e.key && e.key.length === 1 ? e.key.toLowerCase() : '';
+    if (!k) return;
+    pos = (k === target[pos]) ? pos + 1 : (k === target[0] ? 1 : 0);
+    if (pos === target.length) {
+      pos = 0;
+      try { sessionStorage.setItem('egg:diamant', '1'); } catch (_) { }
+      if (window.toast) window.toast('💎 Flappeurd approuve. 100 000 diamants et toujours pas assez.');
+      if (!reduce) {
+        for (var i = 0; i < 10; i++) {
+          (function (delay) {
+            setTimeout(function () {
+              var s = document.createElement('span');
+              s.textContent = '💎';
+              s.style.cssText = 'position:fixed;z-index:600;pointer-events:none;font-size:' + (14 + Math.random() * 10) + 'px;' +
+                'left:' + (Math.random() * 100) + 'vw;bottom:-20px;opacity:.9;transition:transform 1.6s ease-out,opacity 1.6s ease-out';
+              document.body.appendChild(s);
+              requestAnimationFrame(function () {
+                s.style.transform = 'translateY(-' + (60 + Math.random() * 30) + 'vh) rotate(' + (Math.random() * 160 - 80) + 'deg)';
+                s.style.opacity = '0';
+              });
+              setTimeout(function () { s.remove(); }, 1700);
+            }, delay);
+          })(i * 70);
+        }
+      }
+    }
   });
 })();
