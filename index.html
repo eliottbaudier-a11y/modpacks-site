@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ece7da" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#18160f" media="(prefers-color-scheme: dark)">
 <title>Modpacks</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -64,6 +66,10 @@
   .mc-btn:hover{filter:brightness(1.14)}
   .mc-btn:active{transform:translateY(3px);box-shadow:inset -1px -1px 0 rgba(255,255,255,.18),inset 1px 1px 0 rgba(0,0,0,.35)}
   .mc-btn:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+  .mc-btn::after{content:"";position:absolute;inset:-3px;border:1.5px solid var(--accent);opacity:0;pointer-events:none}
+  .intro.ready .mc-btn::after{animation:mcPulse 2.8s ease-in-out 2.4s infinite}
+  @keyframes mcPulse{0%,100%{opacity:0;transform:scale(1)}50%{opacity:.55;transform:scale(1.05)}}
+  @media (prefers-reduced-motion:reduce){.intro.ready .mc-btn::after{animation:none}}
 
   @media (max-aspect-ratio:1/1){
     .intro-video{object-position:18% center}
@@ -108,25 +114,31 @@
 </div></header>
 
 <div class="wrap">
-  <section class="lib-hero">
+  <section class="lib-hero reveal">
     <p class="kicker" id="kicker">Bibliothèque</p>
     <h1 id="lib-title">modpacks.</h1>
     <p class="lede" id="lib-lede"></p>
   </section>
 
-  <div class="seclabel" id="seclabel"></div>
-  <section class="packs" id="packs"></section>
+  <div class="seclabel reveal" id="seclabel"></div>
+  <section class="packs reveal" id="packs"></section>
 </div>
 
 <footer class="wrap" id="foot"></footer>
 
 <script src="/data/modpacks.js"></script>
 <script src="/assets/home.js"></script>
-<script src="/assets/nav.js"></script>
+<script src="/assets/toast.js"></script>
 <script>
 (function () {
+  window.__revealHandled = true;
+  function revealHome() {
+    var els = [].slice.call(document.querySelectorAll('.reveal'));
+    els.forEach(function (el, i) { el.style.transitionDelay = Math.min(i * 80, 240) + 'ms'; });
+    requestAnimationFrame(function () { els.forEach(function (el) { el.classList.add('in'); }); });
+  }
   var intro = document.getElementById('intro');
-  if (!intro) return;
+  if (!intro) { revealHome(); return; }
   var enterBtn = document.getElementById('introEnter');
   var video = document.getElementById('introVideo');
   var info = document.getElementById('introInfo');
@@ -161,6 +173,7 @@
       intro.hidden = true;
       if (video) video.pause();
     }, reduced ? 320 : 720);
+    revealHome();
   }
 
   enterBtn.addEventListener('click', dismiss);
@@ -169,5 +182,6 @@
   });
 })();
 </script>
+<script src="/assets/nav.js"></script>
 </body>
 </html>
