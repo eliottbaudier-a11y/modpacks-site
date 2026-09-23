@@ -147,7 +147,8 @@
   var fields={name:'f-name',id:'f-id',mc:'f-mc',loader:'f-loader',tag:'f-tag',status:'f-status',desc:'f-desc',dl:'f-dl',discord:'f-discord',cover:'f-cover'};
   var draft={meta:{},mods:[]};
   try{draft=JSON.parse(localStorage.getItem(DKEY))||draft;}catch(e){}
-  draft.meta=draft.meta||{}; draft.mods=draft.mods||[];
+  draft.meta=(draft.meta&&typeof draft.meta==='object'&&!Array.isArray(draft.meta))?draft.meta:{};
+  draft.mods=Array.isArray(draft.mods)?draft.mods.filter(function(m){return m&&typeof m==='object';}):[];
   function saveDraft(){try{localStorage.setItem(DKEY,JSON.stringify(draft));}catch(e){}}
 
   Object.keys(fields).forEach(function(k){
@@ -294,7 +295,7 @@
   /* back-to-top */
   (function(){var tt=document.getElementById('totop');if(!tt)return;addEventListener('scroll',function(){tt.classList.toggle('show',scrollY>420);},{passive:true});tt.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});})();
 
-  renderMods();
+  try{renderMods();}catch(e){myGrid.innerHTML='<div class="empty">brouillon local illisible — vide-le puis recharge la page.</div>';}
 
   /* ---- 4 · modération live (add/remove via /api/admin-mods) ---- */
   (function(){
