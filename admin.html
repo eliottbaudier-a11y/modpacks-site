@@ -6,6 +6,7 @@
 <title>Générateur de modpack</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/png" href="/assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
@@ -153,8 +154,8 @@
     el.addEventListener('input',function(){draft.meta[k]=el.value;saveDraft();});
   });
   var nameEl=document.getElementById('f-name'), idEl=document.getElementById('f-id');
-  var idTouched=!!draft.meta.id;
-  idEl.addEventListener('input',function(){idTouched=true;});
+  var idTouched=!!draft.meta.idTouched;
+  idEl.addEventListener('input',function(){idTouched=true;draft.meta.idTouched=true;saveDraft();});
   nameEl.addEventListener('input',function(){ if(!idTouched){ idEl.value=slugify(nameEl.value); draft.meta.id=idEl.value; saveDraft(); } });
 
   /* ---- category select ---- */
@@ -164,10 +165,10 @@
   /* ---- icon helpers (Modrinth + emoji fallback) ---- */
   var inflight=0, queue=[];
   function loadIcons(){document.querySelectorAll('.ph[data-slug]').forEach(function(ph){var slug=ph.dataset.slug;if(!slug||ph.dataset.q)return;ph.dataset.q=1;queue.push({ph:ph,slug:slug});});pump();}
-  function pump(){while(inflight<6&&queue.length){var it=queue.shift();inflight++;(function(ph,slug){getIcon(slug).then(function(url){if(url&&ph.isConnected){var img=new Image();img.onload=function(){ph.outerHTML='<img src="'+url+'" alt="">';};img.src=url;}}).catch(function(){}).finally(function(){inflight--;pump();});})(it.ph,it.slug);}}
+  function pump(){while(inflight<6&&queue.length){var it=queue.shift();inflight++;(function(ph,slug){getIcon(slug).then(function(url){if(url&&ph.isConnected){var col=ph.dataset.col||'#8b8f96',emoji=ph.dataset.emoji||'🧩';var img=new Image();img.onload=function(){ph.outerHTML='<img src="'+esc(url)+'" alt="" data-col="'+esc(col)+'" data-emoji="'+esc(emoji)+'">';};img.src=url;}}).catch(function(){}).finally(function(){inflight--;pump();});})(it.ph,it.slug);}}
   function getIcon(slug){try{var c=localStorage.getItem('mr:'+slug);if(c)return Promise.resolve(c==='0'?null:c);}catch(e){}return fetch('https://api.modrinth.com/v2/project/'+encodeURIComponent(slug)).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){var url=j.icon_url||null;try{localStorage.setItem('mr:'+slug,url||'0');}catch(e){}return url;});}
-  function phTile(col,emoji,slug){return '<div class="ph" style="--pc:'+col+'"'+(slug?' data-slug="'+slug+'"':'')+'><span>'+(emoji||'🧩')+'</span></div>';}
-  function iconHTML(url,col,emoji,slug){if(url)return '<img src="'+url+'" alt="" loading="lazy" data-col="'+col+'" data-emoji="'+(emoji||'🧩')+'">';return phTile(col,emoji,slug);}
+  function phTile(col,emoji,slug){return '<div class="ph" style="--pc:'+esc(col)+'" data-col="'+esc(col)+'" data-emoji="'+esc(emoji||'🧩')+'"'+(slug?' data-slug="'+esc(slug)+'"':'')+'><span>'+(emoji||'🧩')+'</span></div>';}
+  function iconHTML(url,col,emoji,slug){if(url)return '<img src="'+esc(url)+'" alt="" loading="lazy" data-col="'+esc(col)+'" data-emoji="'+esc(emoji||'🧩')+'">';return phTile(col,emoji,slug);}
   document.addEventListener('error',function(e){var t=e.target;if(t&&t.tagName==='IMG'&&t.parentElement&&t.parentElement.classList.contains('icon')&&!t.dataset.fb){t.dataset.fb=1;t.outerHTML=phTile(t.dataset.col||'#8b8f96',t.dataset.emoji||'🧩','');}},true);
 
   /* ---- mods builder ---- */
@@ -188,7 +189,7 @@
     var ver=it.mver?'<p class="cdep" style="opacity:.8"><b>'+esc((it.ld||'')+' '+(it.mcv||''))+'</b> — v'+esc(it.mver)+' <span style="color:var(--ok)">✓ compatible</span></p>':'';
     var reqby=it.reqBy?'<p class="cdep"><b>requis par</b> — '+esc(it.reqBy)+'</p>':'';
     return '<article class="card"><button class="rm" title="Retirer" data-i="'+idx+'">✕</button>'+
-      '<div class="ctop"><div class="icon">'+icon+'</div><div style="min-width:0;flex:1">'+
+      '<div class="ctop"><div class="icon">'+icon+'</div><div style="min-width:120px;flex:1">'+
       '<div class="cname">'+esc(it.name)+'</div><div class="cmeta"><span class="sw" style="background:'+col+'"></span><span>'+esc(catname)+'</span>'+type+side+'</div></div>'+
       '<span class="status ok">Retenu</span></div><p class="cdesc">'+esc(it.desc||'')+'</p>'+ver+reqby+
       '<a class="go" href="'+esc(it.url)+'" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';
@@ -228,6 +229,7 @@
     }).catch(function(){return {ok:false,error:'Modrinth indisponible — réessaie.'};});
   }
   function addFromInput(){
+    if(addBtn.disabled)return;
     var raw=urlIn.value.trim();if(!raw){urlIn.focus();return;}
     var parts=raw.split(/[\s,]+/).filter(Boolean);addBtn.disabled=true;errEl.textContent='résolution via Modrinth…';
     var chain=Promise.resolve({added:[],errors:[]});
@@ -330,7 +332,7 @@
       var reqby=m.reqBy?'<p class="cdep"><b>requis par</b> — '+esc(m.reqBy)+'</p>':'';
       return '<article class="card"><button class="rm rm-edit" title="Modifier" data-edit-sl="'+esc(m.sl)+'">✎</button>'+
         '<button class="rm rm-del" title="Supprimer" data-sl="'+esc(m.sl)+'">✕</button>'+
-        '<div class="ctop"><div class="icon">'+icon+'</div><div style="min-width:0;flex:1">'+
+        '<div class="ctop"><div class="icon">'+icon+'</div><div style="min-width:120px;flex:1">'+
         '<div class="cname">'+esc(m.n)+'</div><div class="cmeta"><span class="sw" style="background:'+col+'"></span><span>'+esc(m.c)+'</span></div></div></div>'+
         '<p class="cdesc">'+esc(m.d||'')+'</p>'+ver+reqby+
         '<a class="go" href="'+esc(m.u)+'" target="_blank" rel="noopener">Voir sur Modrinth <span class="ar">↗</span></a></article>';

@@ -6,6 +6,7 @@
 <title>Galerie</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="icon" type="image/png" href="/assets/logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/style.css">
 <style>
@@ -344,7 +345,7 @@
 
   var LSKEY="gallery:add:v1";
   function loadAdded(){try{return JSON.parse(localStorage.getItem(LSKEY))||[];}catch(e){return [];}}
-  function saveAdded(a){try{localStorage.setItem(LSKEY,JSON.stringify(a));}catch(e){}}
+  function saveAdded(a){try{localStorage.setItem(LSKEY,JSON.stringify(a));return true;}catch(e){return false;}}
   var added=loadAdded();
 
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
@@ -545,7 +546,9 @@
     if(!mAuthor.value.trim()){mErr.textContent="Indique ton pseudo.";return;}
     var it={id:"g"+Date.now()+Math.floor(Math.random()*1000),t:mTitle.value.trim(),a:mAuthor.value.trim(),
       role:"",d:mDate.value.trim()||todayFR(),c:mCat.value,x:mDesc.value.trim(),z:mCoord.value.trim(),src:pendingSrc};
-    added.push(it);saveAdded(added);closeModal();
+    added.push(it);
+    if(!saveAdded(added)){added.pop();mErr.textContent="stockage local plein — libère de la place (dans les réglages du navigateur) avant d'ajouter une nouvelle image.";return;}
+    closeModal();
     if(active!=="Tout"&&active!==it.c){active="Tout";fbar.querySelectorAll(".gf").forEach(function(x){x.classList.toggle("active",x.dataset.f==="Tout");});}
     render();
     var wrap=document.querySelector(".board-wrap");if(wrap)wrap.scrollIntoView({behavior:"smooth",block:"start"});
