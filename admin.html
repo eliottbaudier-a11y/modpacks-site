@@ -107,26 +107,26 @@
   <div class="secttl">4 · Modérer un pack en ligne</div>
   <p class="secsub">Ajoute ou retire des mods directement sur le site en ligne — publie un commit GitHub, visible en ligne après ~30-60s (redéploiement automatique). Protégé par mot de passe.</p>
   <div class="form" style="max-width:560px">
-    <div class="field wide"><label>Mot de passe admin</label><input id="ad-pw" type="password" placeholder="mot de passe" autocomplete="off"></div>
-    <div class="field wide"><label>Pack à modérer</label><select id="ad-pack"></select></div>
+    <div class="field wide"><label>Mot de passe admin</label><input id="lm-pw" type="password" placeholder="mot de passe" autocomplete="off"></div>
+    <div class="field wide"><label>Pack à modérer</label><select id="lm-pack"></select></div>
   </div>
   <div class="gen-row">
-    <button class="dl-btn ghost" id="ad-load">Charger les mods de ce pack</button>
-    <button class="dl-btn ghost" id="ad-verify" hidden>Vérifier les mods</button>
+    <button class="dl-btn ghost" id="lm-load">Charger les mods de ce pack</button>
+    <button class="dl-btn ghost" id="lm-verify" hidden>Vérifier les mods</button>
   </div>
-  <p class="err" id="ad-err"></p>
-  <pre id="ad-report" class="howto" style="display:none;font-family:var(--mono);font-size:12.5px;line-height:1.8;white-space:pre-wrap;max-width:820px"></pre>
+  <p class="err" id="lm-err"></p>
+  <pre id="lm-report" class="howto" style="display:none;font-family:var(--mono);font-size:12.5px;line-height:1.8;white-space:pre-wrap;max-width:820px"></pre>
 
-  <div id="ad-panel" hidden>
-    <p class="secsub" style="margin-top:0">Colle un lien Modrinth (le mod doit être compatible avec <b id="ad-cfg"></b> — sinon il ne sera pas ajouté). Les dépendances obligatoires sont ajoutées automatiquement.</p>
+  <div id="lm-panel" hidden>
+    <p class="secsub" style="margin-top:0">Colle un lien Modrinth (le mod doit être compatible avec <b id="lm-cfg"></b> — sinon il ne sera pas ajouté). Les dépendances obligatoires sont ajoutées automatiquement.</p>
     <div class="addbar">
-      <div class="f"><input id="ad-url" type="text" placeholder="colle un lien modrinth pour ajouter un mod…" autocomplete="off" spellcheck="false"></div>
-      <select id="ad-cat" aria-label="catégorie"></select>
-      <select id="ad-st" aria-label="statut"><option value="À tester">à tester</option><option value="Retenu">retenu</option></select>
-      <button id="ad-add" class="add-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ajouter</button>
+      <div class="f"><input id="lm-url" type="text" placeholder="colle un lien modrinth pour ajouter un mod…" autocomplete="off" spellcheck="false"></div>
+      <select id="lm-cat" aria-label="catégorie"></select>
+      <select id="lm-st" aria-label="statut"><option value="À tester">à tester</option><option value="Retenu">retenu</option></select>
+      <button id="lm-add" class="add-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Ajouter</button>
     </div>
-    <p class="err" id="ad-add-err"></p>
-    <section class="grid" id="ad-grid" style="margin-bottom:60px"></section>
+    <p class="err" id="lm-add-err"></p>
+    <section class="grid" id="lm-grid" style="margin-bottom:60px"></section>
   </div>
 </div>
 
@@ -300,13 +300,13 @@
   /* ---- 4 · modération live (add/remove via /api/admin-mods) ---- */
   (function(){
     var PACKS=window.MODPACKS||[];
-    var pwEl=document.getElementById('ad-pw'), packSel=document.getElementById('ad-pack');
-    var loadBtn=document.getElementById('ad-load'), errEl=document.getElementById('ad-err');
-    var verifyBtn=document.getElementById('ad-verify'), reportEl=document.getElementById('ad-report');
-    var panel=document.getElementById('ad-panel'), grid=document.getElementById('ad-grid');
-    var cfgEl=document.getElementById('ad-cfg');
-    var catSel=document.getElementById('ad-cat'), stSel=document.getElementById('ad-st');
-    var urlIn=document.getElementById('ad-url'), addBtn=document.getElementById('ad-add'), addErr=document.getElementById('ad-add-err');
+    var pwEl=document.getElementById('lm-pw'), packSel=document.getElementById('lm-pack');
+    var loadBtn=document.getElementById('lm-load'), errEl=document.getElementById('lm-err');
+    var verifyBtn=document.getElementById('lm-verify'), reportEl=document.getElementById('lm-report');
+    var panel=document.getElementById('lm-panel'), grid=document.getElementById('lm-grid');
+    var cfgEl=document.getElementById('lm-cfg');
+    var catSel=document.getElementById('lm-cat'), stSel=document.getElementById('lm-st');
+    var urlIn=document.getElementById('lm-url'), addBtn=document.getElementById('lm-add'), addErr=document.getElementById('lm-add-err');
     if(!packSel) return;
     var currentId='', currentList=[], editingSlug=null, currentPack=null;
 
