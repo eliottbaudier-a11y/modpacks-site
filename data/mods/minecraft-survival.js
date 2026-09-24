@@ -1176,5 +1176,28 @@ window.MODS_BY_PACK["minecraft-survival"] = [
   "sl": "ribbits",
   "t": "mod",
   "i": "https://cdn.modrinth.com/data/8YcE8y4T/3ce5ca40bdbae97978c5950a8be3222c97ac0c35_96.webp"
+ },
+ {
+  "n": "FallingTree",
+  "c": "Agriculture & nourriture",
+  "e": "🌾",
+  "d": "Break down your trees by only cutting one piece of it",
+  "v": "",
+  "s": "Client & serveur",
+  "st": "Retenu",
+  "dep": "",
+  "u": "https://modrinth.com/mod/fallingtree",
+  "sl": "fallingtree",
+  "t": "mod",
+  "i": "https://cdn.modrinth.com/data/Fb4jn8m6/02610e2f41e1a4ea06b36ad5034be2b3d03b8f88_96.webp",
+  "mver": "1.21.1-1.21.1.11",
+  "furl": "https://cdn.modrinth.com/data/Fb4jn8m6/versions/wxGXaJMA/FallingTree-1.21.1-1.21.1.11.jar",
+  "fname": "FallingTree-1.21.1-1.21.1.11.jar",
+  "fsize": 496356,
+  "vid": "wxGXaJMA",
+  "mcv": "1.21.1",
+  "ld": "fabric",
+  "autoAdded": false,
+  "reqBy": null
  }
 ];
