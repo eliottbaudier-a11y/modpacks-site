@@ -51,7 +51,7 @@ window.MODPACKS = [
     status: "active",
     modsCount: 85,
     cover: "/covers/minecraft-survival.jpg",
-    download: "https://github.com/eliottbaudier-a11y/modpacks-site/releases/download/pack-1.21.1/Dossier.Mod.1.21.1.zip",
+    download: "https://github.com/eliottbaudier-a11y/modpacks-site/releases/download/pack-1.21.1/momods.zip",
     discord: ""
   }
   // ← copie ce bloc pour ajouter un nouveau serveur (n'oublie pas la virgule au-dessus)
