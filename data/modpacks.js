@@ -49,9 +49,9 @@ window.MODPACKS = [
     tagline: "Survival vanilla+",
     description: "Le catalogue des mods pensés pour le serveur — chacun expliqué, classé et suivi. Cherche, filtre par catégorie ou par statut, et ouvre la page Modrinth d'un clic.",
     status: "active",
-    modsCount: 84,
+    modsCount: 85,
     cover: "/covers/minecraft-survival.jpg",
-    download: "https://github.com/eliottbaudier-a11y/modpacks-site/releases/download/pack-1.21.1/Pack_mods_1_21_1.zip",
+    download: "https://github.com/eliottbaudier-a11y/modpacks-site/releases/download/pack-1.21.1/Dossier.Mod.1.21.1.zip",
     discord: ""
   }
   // ← copie ce bloc pour ajouter un nouveau serveur (n'oublie pas la virgule au-dessus)
