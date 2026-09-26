@@ -531,8 +531,26 @@
   document.getElementById("mClose").addEventListener("click",closeModal);
   document.getElementById("mCancel").addEventListener("click",closeModal);
   modal.addEventListener("click",function(e){if(e.target===modal)closeModal();});
-  function readFile(f){if(!f||!/^image\//.test(f.type))return;var r=new FileReader();r.onload=function(){pendingSrc=r.result;
-    drop.querySelectorAll("img").forEach(function(x){x.remove();});var im=new Image();im.src=pendingSrc;drop.appendChild(im);dropPh.style.display="none";updatePreview();};r.readAsDataURL(f);}
+  function readFile(f){
+    if(!f||!/^image\//.test(f.type))return;
+    var r=new FileReader();
+    r.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var maxDim=1600;
+        var w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+        var scale=Math.min(1,maxDim/Math.max(w,h));
+        var cw=Math.max(1,Math.round(w*scale)),ch=Math.max(1,Math.round(h*scale));
+        var canvas=document.createElement("canvas");canvas.width=cw;canvas.height=ch;
+        canvas.getContext("2d").drawImage(img,0,0,cw,ch);
+        pendingSrc=canvas.toDataURL("image/jpeg",0.82);
+        drop.querySelectorAll("img").forEach(function(x){x.remove();});
+        var im=new Image();im.src=pendingSrc;drop.appendChild(im);dropPh.style.display="none";updatePreview();
+      };
+      img.src=r.result;
+    };
+    r.readAsDataURL(f);
+  }
   mFile.addEventListener("change",function(){readFile(mFile.files[0]);});
   drop.addEventListener("dragover",function(e){e.preventDefault();drop.style.borderColor="var(--accent)";});
   drop.addEventListener("dragleave",function(){drop.style.borderColor="";});
